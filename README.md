@@ -24,23 +24,6 @@ specifying for which tasks and which parts of the project.
 
 ## Additional sections may be required depending on the project (e.g., usage examples, feature list, technical choices, etc.).
 
-
-### Any required additions will be explicitly listed below.
-
-For this project, the README.md must also include:
-
-• Algorithm explanation: Describe your constrained decoding approach in detail
-
-• Design decisions: Explain key choices in your implementation
-
-• Performance analysis: Discuss accuracy, speed, and reliability of your solution
-
-• Challenges faced: Document difficulties encountered and how you solved them
-
-• Testing strategy: Describe how you validated your implementation
-
-• Example usage: Provide clear examples of running your program
-
 ---
 
 # Call Me Maybe
@@ -84,11 +67,19 @@ Example:
 ## Additional sections:
 
 ### Algorithm explanation
+• Algorithm explanation: Describe your constrained decoding approach in detail
 
 ### Design decisions
+• Design decisions: Explain key choices in your implementation
 
 ### Performance analysis
+• Performance analysis: Discuss accuracy, speed, and reliability of your solution
 
 ### Challenges faced
+• Challenges faced: Document difficulties encountered and how you solved them
+
+### Testing strategy
+• Testing strategy: Describe how you validated your implementation
 
 ### Example usage
+• Example usage: Provide clear examples of running your program
