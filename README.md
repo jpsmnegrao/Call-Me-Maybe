@@ -40,3 +40,55 @@ For this project, the README.md must also include:
 • Testing strategy: Describe how you validated your implementation
 
 • Example usage: Provide clear examples of running your program
+
+---
+
+# Call Me Maybe
+
+## Description
+
+## Instructions
+
+### Requirements
+
+- Python 3.10+
+
+### Installation
+
+`make`
+
+### Run
+
+`make run`
+
+or
+
+`python3 main.py <map_file>`
+
+Example:
+
+`python3 main.py maps/simple.txt`
+
+---
+
+## Resources
+
+### Documentation
+
+- to fill in
+
+### AI Usage
+
+---
+
+## Additional sections:
+
+### Algorithm explanation
+
+### Design decisions
+
+### Performance analysis
+
+### Challenges faced
+
+### Example usage
