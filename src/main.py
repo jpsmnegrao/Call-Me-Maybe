@@ -1,1 +1,1 @@
-"""Placeholder content/file jsut for project setup"""
+"""Placeholder content/file just for project setup"""
