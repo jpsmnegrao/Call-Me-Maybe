@@ -1,46 +1,34 @@
-VENV := venv
-PYTHON := $(VENV)/bin/python3
-PIP := $(VENV)/bin/pip
-MAIN := main.py
-
 .PHONY: install run debug clean lint lint-strict
 
 all: install
 
 install:
-	@if [ -d "$(VENV)" ]; then \
-		echo "Already installed. Run 'make clean' and 'make install' to reinstall."; \
-	else \
-		python3 -m venv $(VENV); \
-		$(PIP) install --upgrade pip; \
-		$(PIP) install -r requirements.txt; \
-		echo "Installation complete!"; \
-	fi
+		uv sync
+		echo "=== Installation complete! ==="
 
 run:
-	@if [ ! -d "$(VENV)" ]; then \
-		echo "Not installed yet. Run 'make install' to setup the project."; \
-	else \
-		$(VENV)/bin/python $(MAIN) $(MAP); \
-	fi
+	uv run python -m src --functions_definition	\
+	data/input/functions_definition.json --input	\
+	data/input/function_calling_tests.json	\
+	--output data/output/function_calls.json
 
 debug:
-	$(PYTHON) -m pdb $(MAIN) $(MAP)
+	uv run python -m pdb -m src -- --functions_definition	\
+	data/input/functions_definition.json --input	\
+	data/input/function_calling_tests.json	\
+	--output data/output/function_calls.json
 
 clean:
-	@if [ ! -d "$(VENV)" ]; then \
-		echo "Nothing to clean. Run 'make install' to setup the project."; \
-	else \
-		rm -rf $(VENV) .mypy_cache .pytest_cache/ ; \
-		find . -type d -name "__pycache__" -exec rm -rf {} + ; \
-		echo "Cleanup complete!"; \
-	fi
+	rm -rf .mypy_cache .pytest_cache/ ; \
+	find . -type d -name "__pycache__" -exec rm -rf {} + ; \
+	echo "Cleanup complete!"; \
+
 
 lint:
-	$(VENV)/bin/flake8 .
-	$(VENV)/bin/mypy . --warn-return-any --warn-unused-ignores \
+	uv run flake8 .
+	uv run mypy . --warn-return-any --warn-unused-ignores \
 		--ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 
 lint-strict:
-	$(VENV)/bin/flake8 .
-	$(VENV)/bin/mypy . --strict
+	uv run flake8 .
+	uv run mypy . --strict
