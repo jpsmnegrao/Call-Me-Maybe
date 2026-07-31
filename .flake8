@@ -3,4 +3,4 @@
 # inside venv/ and crash on style issues in third-party packages.
 
 [flake8]
-exclude = llm_sdk,venv,.venv,__pycache__,.mypy_cache
+exclude = llm_sdk,.venv,__pycache__,.mypy_cache
