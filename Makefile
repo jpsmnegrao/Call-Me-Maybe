@@ -1,10 +1,10 @@
-.PHONY: install run debug clean lint lint-strict
+.PHONY: install run debug clean lint lint-strict test
 
 all: install
 
 install:
-		uv sync
-		echo "=== Installation complete! ==="
+	uv sync
+	@echo "=== Installation complete! ==="
 
 run:
 	uv run python -m src --functions_definition	\
@@ -19,10 +19,13 @@ debug:
 	--output data/output/function_calls.json
 
 clean:
-	rm -rf .mypy_cache .pytest_cache/ ; \
+	@rm -rf .mypy_cache .pytest_cache/ ; \
 	find . -type d -name "__pycache__" -exec rm -rf {} + ; \
 	echo "Cleanup complete!"; \
 
+fclean: clean
+	@rm -rf .venv
+	@echo "Removed virtual environment. Deep clean complete!"
 
 lint:
 	uv run flake8 .
@@ -32,3 +35,6 @@ lint:
 lint-strict:
 	uv run flake8 .
 	uv run mypy . --strict
+
+test:
+	uv run pytest -v
