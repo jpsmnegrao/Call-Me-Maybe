@@ -7,16 +7,19 @@ from typing import Literal
 
 class Prompt(BaseModel):
     """mambo"""
+    model_config = {"extra": "forbid"}
     prompt: str
 
 
 class ParameterInfo(BaseModel):
     """mambo"""
+    model_config = {"extra": "forbid"}
     type: Literal["string", "number", "boolean", "array", "object"]
 
 
 class FunctionDefinition(BaseModel):
     """mambo"""
+    model_config = {"extra": "forbid"}
     name: str
     description: str
     parameters: dict[str, ParameterInfo]

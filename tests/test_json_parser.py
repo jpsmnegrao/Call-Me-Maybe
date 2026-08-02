@@ -25,3 +25,46 @@ def test_prompt_parser_file_not_found() -> None:
     """jambo jambo"""
     with pytest.raises(ValueError):
         prompt_parser("tests/data/function_calling_no_file.json")
+
+
+def test_prompt_parser_invalid_syntax() -> None:
+    """jambo jambo"""
+    with pytest.raises(ValueError):
+        prompt_parser("tests/data/function_calling_tests_invalid_syntax.json")
+
+
+def test_prompt_parser_empty_array() -> None:
+    """jambo jambo"""
+    with pytest.raises(ValueError):
+        prompt_parser("tests/data/function_calling_tests_empty_array.json")
+
+
+def test_prompt_parser_not_array() -> None:
+    """jambo jambo"""
+    with pytest.raises(ValueError):
+        prompt_parser("tests/data/function_calling_tests_not_array.json")
+
+
+def test_prompt_parser_missing_key() -> None:
+    """jambo jambo"""
+    with pytest.raises(ValueError):
+        prompt_parser("tests/data/function_calling_tests_missing_key.json")
+
+
+def test_prompt_parser_wrong_key() -> None:
+    """jambo jambo"""
+    with pytest.raises(ValueError):
+        prompt_parser("tests/data/function_calling_tests_wrong_key.json")
+
+
+def test_prompt_parser_invalid_data_type() -> None:
+    """jambo jambo"""
+    with pytest.raises(ValueError):
+        prompt_parser(
+            "tests/data/function_calling_tests_invalid_prompt_data_type.json")
+
+
+def test_prompt_parser_extra_key() -> None:
+    """jambo jambo"""
+    with pytest.raises(ValueError):
+        prompt_parser("tests/data/function_calling_tests_extra_key.json")
