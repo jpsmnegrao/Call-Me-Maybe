@@ -6,7 +6,6 @@ each entry against the corresponding pydantic schema.
 """
 
 import json
-from pydantic import ValidationError
 from schemas import Prompt, FunctionDefinition
 
 
@@ -23,25 +22,20 @@ def prompt_parser(filename: str) -> list[Prompt]:
         A list of validated Prompt instances.
 
     Raises:
-        ValueError: If file does not exist, is not valid JSON, is empty, or
-            contains an entry that does not match the expected Prompt schema.
+        FileNotFoundError: If the file does not exist.
+        json.JSONDecodeError: If the file does not contain valid JSON.
+        ValidationError: If an entry does not match the expected Prompt schema.
+        ValueError: If the file contains an empty array.
     """
-    try:
-        prompts: list[Prompt] = []
-        with open(filename, 'r') as file:
-            raw_prompts: list[dict] = json.load(file)
-            if not raw_prompts:
-                raise ValueError("Empty file provided!")
-            for prompt in raw_prompts:
-                prompts.append(Prompt(**prompt))
-    except FileNotFoundError:
-        raise ValueError("File not found!")
-    except json.JSONDecodeError:
-        raise ValueError("Invalid json format!")
-    except ValidationError:
-        raise ValueError("Prompt entry does not match the expected format!")
-    except ValueError:
-        raise
+    prompts: list[Prompt] = []
+    with open(filename, 'r') as file:
+        raw_prompts: list[dict] = json.load(file)
+        if not isinstance(raw_prompts, list):
+            raise ValueError("Expected a JSON array!")
+        if not raw_prompts:
+            raise ValueError("Empty file provided!")
+        for prompt in raw_prompts:
+            prompts.append(Prompt(**prompt))
     return prompts
 
 
@@ -59,24 +53,19 @@ def function_parser(filename: str) -> list[FunctionDefinition]:
         A list of validated FunctionDefinition instances.
 
     Raises:
-        ValueError: If file does not exist, is not valid JSON, is empty, or
-            contains an entry that does not match the expected
+        FileNotFoundError: If the file does not exist.
+        json.JSONDecodeError: If the file does not contain valid JSON.
+        ValidationError: If an entry does not match the expected
             FunctionDefinition schema.
+        ValueError: If the file contains an empty array.
     """
-    try:
-        functions: list[FunctionDefinition] = []
-        with open(filename, 'r') as file:
-            raw_funcs: list[dict] = json.load(file)
-            if not raw_funcs:
-                raise ValueError("Empty file provided!")
-            for function in raw_funcs:
-                functions.append(FunctionDefinition(**function))
-    except FileNotFoundError:
-        raise ValueError("File not found!")
-    except json.JSONDecodeError:
-        raise ValueError("Invalid json format!")
-    except ValidationError:
-        raise ValueError("Function entry does not match the expected format!")
-    except ValueError:
-        raise
+    functions: list[FunctionDefinition] = []
+    with open(filename, 'r') as file:
+        raw_funcs: list[dict] = json.load(file)
+        if not isinstance(raw_funcs, list):
+            raise ValueError("Expected a JSON array!")
+        if not raw_funcs:
+            raise ValueError("Empty file provided!")
+        for function in raw_funcs:
+            functions.append(FunctionDefinition(**function))
     return functions

@@ -25,7 +25,7 @@ clean:
 
 fclean: clean
 	@rm -rf .venv
-	@echo "Removed virtual environment. Deep clean complete!"
+	@echo "Removed virtual environment - deep clean complete!"
 
 lint:
 	uv run flake8 .
@@ -38,3 +38,6 @@ lint-strict:
 
 test:
 	uv run pytest -v
+
+test-silent:
+	uv run pytest -q --tb=no -s
