@@ -2,8 +2,12 @@
 
 import pytest
 import json
+
 from pathlib import Path
+from collections.abc import Callable
 from pydantic import ValidationError
+from typing import cast, Any
+
 from src.schemas import Prompt, FunctionDefinition
 from src.json_parser import prompt_parser, function_parser
 
@@ -11,7 +15,9 @@ from src.json_parser import prompt_parser, function_parser
 DATA = Path("tests/data")
 
 
-def run_parser_test(parser, file_path: Path):
+def run_parser_test(
+        parser: Callable[[Path], list[Prompt] | list[FunctionDefinition]],
+        file_path: Path) -> list[Prompt] | list[FunctionDefinition]:
     try:
         result = parser(file_path)
         print("\n" + "=" * 70)
@@ -35,10 +41,13 @@ def run_parser_test(parser, file_path: Path):
 def test_prompt_parser_valid() -> None:
     """amambo jambo"""
     with open("tests/data/function_calling_tests.json", 'r') as file:
-        raw_prompts: list[dict] = json.load(file)
-    prompts = run_parser_test(
-        prompt_parser,
-        DATA / "function_calling_tests.json",
+        raw_prompts: list[dict[str, Any]] = json.load(file)
+    prompts = cast(
+        list[Prompt],
+        run_parser_test(
+            prompt_parser,
+            DATA / "function_calling_tests.json",
+        )
     )
     assert len(raw_prompts) == len(prompts)
     for prompt in prompts:
@@ -127,10 +136,13 @@ def test_prompt_parser_extra_key() -> None:
 def test_function_parser_valid() -> None:
     """amambo jambo"""
     with open("tests/data/functions_definition.json", 'r') as file:
-        raw_functions: list[dict] = json.load(file)
-    functions: list[FunctionDefinition] = run_parser_test(
-        function_parser,
-        DATA / "functions_definition.json",
+        raw_functions: list[dict[str, Any]] = json.load(file)
+    functions = cast(
+        list[FunctionDefinition],
+        run_parser_test(
+            function_parser,
+            DATA / "functions_definition.json",
+        )
     )
     assert len(raw_functions) == len(functions)
     for function in functions:
@@ -215,16 +227,19 @@ def test_function_parser_extra_nested_key() -> None:
 
 def test_function_parser_empty_parameters() -> None:
     """jambo jambo"""
-    functions = run_parser_test(
-        function_parser,
-        DATA / "functions_definition_empty_parameters.json",
+    functions = cast(
+        list[FunctionDefinition],
+        run_parser_test(
+            function_parser,
+            DATA / "functions_definition_empty_parameters.json",
+        )
     )
     assert isinstance(functions, list)
     assert len(functions) > 0
     assert any(function.parameters == {} for function in functions)
 
 
-VALID_FUNCTION_DEFINITION: dict = {
+VALID_FUNCTION_DEFINITION: dict[str, Any] = {
     "name": "fn_add_numbers",
     "description": "Add two numbers together and return their sum.",
     "parameters": {

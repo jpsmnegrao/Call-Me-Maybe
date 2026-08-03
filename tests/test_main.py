@@ -23,7 +23,8 @@ DATA = Path("tests/data")
 
 
 def run_main_with_files(
-        monkeypatch, capsys, input_file: Path, functions_file: Path) -> None:
+        monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
+        input_file: Path, functions_file: Path) -> None:
     monkeypatch.setattr(
         sys,
         "argv",
@@ -53,7 +54,9 @@ def run_main_with_files(
         raise
 
 
-def test_main_clean_exit_on_prompt_file_not_found(monkeypatch, capsys) -> None:
+def test_main_clean_exit_on_prompt_file_not_found(
+        monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+        ) -> None:
     """mambo"""
     with pytest.raises(SystemExit):
         run_main_with_files(
@@ -64,7 +67,9 @@ def test_main_clean_exit_on_prompt_file_not_found(monkeypatch, capsys) -> None:
         )
 
 
-def test_main_clean_exit_on_prompt_invalid_syntax(monkeypatch, capsys) -> None:
+def test_main_clean_exit_on_prompt_invalid_syntax(
+        monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+        ) -> None:
     """mambo"""
     with pytest.raises(SystemExit):
         run_main_with_files(
@@ -76,7 +81,8 @@ def test_main_clean_exit_on_prompt_invalid_syntax(monkeypatch, capsys) -> None:
 
 
 def test_main_clean_exit_on_prompt_validation_error(
-        monkeypatch, capsys) -> None:
+        monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+        ) -> None:
     """mambo"""
     with pytest.raises(SystemExit):
         run_main_with_files(
@@ -87,7 +93,9 @@ def test_main_clean_exit_on_prompt_validation_error(
         )
 
 
-def test_main_clean_exit_on_prompt_empty_file(monkeypatch, capsys) -> None:
+def test_main_clean_exit_on_prompt_empty_file(
+        monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+        ) -> None:
     """mambo"""
     with pytest.raises(SystemExit):
         run_main_with_files(
@@ -98,7 +106,9 @@ def test_main_clean_exit_on_prompt_empty_file(monkeypatch, capsys) -> None:
         )
 
 
-def test_main_clean_exit_on_prompt_not_array(monkeypatch, capsys) -> None:
+def test_main_clean_exit_on_prompt_not_array(
+        monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+        ) -> None:
     """mambo"""
     with pytest.raises(SystemExit):
         run_main_with_files(
@@ -110,7 +120,8 @@ def test_main_clean_exit_on_prompt_not_array(monkeypatch, capsys) -> None:
 
 
 def test_main_clean_exit_on_function_file_not_found(
-        monkeypatch, capsys) -> None:
+        monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+        ) -> None:
     """mambo"""
     with pytest.raises(SystemExit):
         run_main_with_files(
@@ -122,7 +133,8 @@ def test_main_clean_exit_on_function_file_not_found(
 
 
 def test_main_clean_exit_on_function_invalid_syntax(
-        monkeypatch, capsys) -> None:
+        monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+        ) -> None:
     """mambo"""
     with pytest.raises(SystemExit):
         run_main_with_files(
@@ -134,7 +146,8 @@ def test_main_clean_exit_on_function_invalid_syntax(
 
 
 def test_main_clean_exit_on_function_validation_error(
-        monkeypatch, capsys) -> None:
+        monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+        ) -> None:
     """mambo"""
     with pytest.raises(SystemExit):
         run_main_with_files(
@@ -145,7 +158,9 @@ def test_main_clean_exit_on_function_validation_error(
         )
 
 
-def test_main_clean_exit_on_function_empty_file(monkeypatch, capsys) -> None:
+def test_main_clean_exit_on_function_empty_file(
+        monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+        ) -> None:
     """mambo"""
     with pytest.raises(SystemExit):
         run_main_with_files(
@@ -156,7 +171,9 @@ def test_main_clean_exit_on_function_empty_file(monkeypatch, capsys) -> None:
         )
 
 
-def test_main_clean_exit_on_function_not_array(monkeypatch, capsys) -> None:
+def test_main_clean_exit_on_function_not_array(
+        monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+        ) -> None:
     """mambo"""
     with pytest.raises(SystemExit):
         run_main_with_files(

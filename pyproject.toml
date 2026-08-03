@@ -8,6 +8,9 @@ build-backend = "hatchling.build"
 [tool.uv]
 package = false
 
+[tool.hatch.metadata]
+allow-direct-references = true
+
 [project]
 name = "call-me-maybe"
 version = "1.0.0"
@@ -19,7 +22,12 @@ readme = "README.md"
 dependencies = [
     "pydantic>=2.0",
     "numpy",
+    "llm_sdk",
+	"accelerate",
 ]
+
+[tool.uv.sources]
+llm_sdk = { path = "llm_sdk" }
 
 [dependency-groups]
 dev = [

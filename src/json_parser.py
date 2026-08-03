@@ -8,6 +8,7 @@ each entry against the corresponding pydantic schema.
 import json
 from .schemas import Prompt, FunctionDefinition
 from pydantic import FilePath
+from typing import Any
 
 
 def prompt_parser(filename: FilePath) -> list[Prompt]:
@@ -30,7 +31,7 @@ def prompt_parser(filename: FilePath) -> list[Prompt]:
     """
     prompts: list[Prompt] = []
     with open(filename, 'r') as file:
-        raw_prompts: list[dict] = json.load(file)
+        raw_prompts: list[dict[str, Any]] = json.load(file)
         if not isinstance(raw_prompts, list):
             raise ValueError("Expected a JSON array!")
         if not raw_prompts:
@@ -62,7 +63,7 @@ def function_parser(filename: FilePath) -> list[FunctionDefinition]:
     """
     functions: list[FunctionDefinition] = []
     with open(filename, 'r') as file:
-        raw_funcs: list[dict] = json.load(file)
+        raw_funcs: list[dict[str, Any]] = json.load(file)
         if not isinstance(raw_funcs, list):
             raise ValueError("Expected a JSON array!")
         if not raw_funcs:

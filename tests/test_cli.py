@@ -21,7 +21,8 @@ from src.cli import CLI, CLIError, parse_cli
 DATA = Path("tests/data")
 
 
-def run_cli_test(monkeypatch, args: list[str], label: str) -> CLI:
+def run_cli_test(
+        monkeypatch: pytest.MonkeyPatch, args: list[str], label: str) -> CLI:
     monkeypatch.setattr(sys, "argv", ["call-me-maybe"] + args)
     try:
         cli = parse_cli()
@@ -42,7 +43,7 @@ def run_cli_test(monkeypatch, args: list[str], label: str) -> CLI:
         raise
 
 
-def test_parse_cli_valid_arguments(monkeypatch) -> None:
+def test_parse_cli_valid_arguments(monkeypatch: pytest.MonkeyPatch) -> None:
     """Valid arguments should return a CLI object."""
     output = DATA / "output.json"
     cli = run_cli_test(
@@ -64,7 +65,7 @@ def test_parse_cli_valid_arguments(monkeypatch) -> None:
 
 
 def test_parse_cli_missing_functions_definition_uses_default(
-        monkeypatch) -> None:
+        monkeypatch: pytest.MonkeyPatch) -> None:
     """Omitting --functions_definition should fall back to its default."""
     cli = run_cli_test(
         monkeypatch,
@@ -79,7 +80,8 @@ def test_parse_cli_missing_functions_definition_uses_default(
     assert str(cli.functions) == "data/input/functions_definition.json"
 
 
-def test_parse_cli_missing_input_uses_default(monkeypatch) -> None:
+def test_parse_cli_missing_input_uses_default(
+        monkeypatch: pytest.MonkeyPatch) -> None:
     """Omitting --input should fall back to its default."""
     cli = run_cli_test(
         monkeypatch,
@@ -94,7 +96,8 @@ def test_parse_cli_missing_input_uses_default(monkeypatch) -> None:
     assert str(cli.input) == "data/input/function_calling_tests.json"
 
 
-def test_parse_cli_missing_output_uses_default(monkeypatch) -> None:
+def test_parse_cli_missing_output_uses_default(
+        monkeypatch: pytest.MonkeyPatch) -> None:
     """Omitting --output should fall back to its default."""
     cli = run_cli_test(
         monkeypatch,
@@ -109,7 +112,8 @@ def test_parse_cli_missing_output_uses_default(monkeypatch) -> None:
     assert str(cli.output) == "data/output/function_calling_results.json"
 
 
-def test_parse_cli_functions_file_not_found(monkeypatch) -> None:
+def test_parse_cli_functions_file_not_found(
+        monkeypatch: pytest.MonkeyPatch) -> None:
     """Nonexistent functions file should fail CLI validation."""
     with pytest.raises(ValidationError):
         run_cli_test(
@@ -126,7 +130,8 @@ def test_parse_cli_functions_file_not_found(monkeypatch) -> None:
         )
 
 
-def test_parse_cli_input_file_not_found(monkeypatch) -> None:
+def test_parse_cli_input_file_not_found(
+        monkeypatch: pytest.MonkeyPatch) -> None:
     """Nonexistent input file should fail CLI validation."""
     with pytest.raises(ValidationError):
         run_cli_test(
@@ -143,7 +148,8 @@ def test_parse_cli_input_file_not_found(monkeypatch) -> None:
         )
 
 
-def test_parse_cli_output_file_can_be_missing(monkeypatch) -> None:
+def test_parse_cli_output_file_can_be_missing(
+        monkeypatch: pytest.MonkeyPatch) -> None:
     """Output path can be missing because it uses Path, not FilePath."""
     output = DATA / "new_output.json"
     cli = run_cli_test(
@@ -161,7 +167,7 @@ def test_parse_cli_output_file_can_be_missing(monkeypatch) -> None:
     assert cli.output == output
 
 
-def test_parse_cli_unrecognized_flag(monkeypatch) -> None:
+def test_parse_cli_unrecognized_flag(monkeypatch: pytest.MonkeyPatch) -> None:
     """An unrecognized flag should raise CLIError, not exit the process."""
     with pytest.raises(CLIError):
         run_cli_test(
