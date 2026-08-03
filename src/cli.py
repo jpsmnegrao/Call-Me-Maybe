@@ -28,9 +28,13 @@ class CLI(BaseModel):
 def parse_cli() -> CLI:
     """mambo jambo"""
     parser = CLIArgParser()
-    parser.add_argument("--functions_definition", required=True)
-    parser.add_argument("--input", required=True)
-    parser.add_argument("--output", required=True)
+    parser.add_argument(
+        "--functions_definition",
+        default="data/input/functions_definition.json")
+    parser.add_argument(
+        "--input", default="data/input/function_calling_tests.json")
+    parser.add_argument(
+        "--output", default="data/output/function_calling_results.json")
     args = parser.parse_args()
     return CLI(
         functions=args.functions_definition,

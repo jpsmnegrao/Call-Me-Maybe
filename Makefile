@@ -39,6 +39,9 @@ fclean: clean
 test:
 	uv run pytest
 
+test-silent:
+	uv run pytest -q --tb=no
+
 test-verbose:
 	uv run pytest -v
 

@@ -36,10 +36,10 @@ def test_prompt_parser_valid() -> None:
     """amambo jambo"""
     with open("tests/data/function_calling_tests.json", 'r') as file:
         raw_prompts: list[dict] = json.load(file)
-        prompts = run_parser_test(
-            prompt_parser,
-            DATA / "function_calling_tests.json",
-        )
+    prompts = run_parser_test(
+        prompt_parser,
+        DATA / "function_calling_tests.json",
+    )
     assert len(raw_prompts) == len(prompts)
     for prompt in prompts:
         assert isinstance(prompt, Prompt)
@@ -128,10 +128,10 @@ def test_function_parser_valid() -> None:
     """amambo jambo"""
     with open("tests/data/functions_definition.json", 'r') as file:
         raw_functions: list[dict] = json.load(file)
-        functions: list[FunctionDefinition] = run_parser_test(
-            function_parser,
-            DATA / "functions_definition.json",
-        )
+    functions: list[FunctionDefinition] = run_parser_test(
+        function_parser,
+        DATA / "functions_definition.json",
+    )
     assert len(raw_functions) == len(functions)
     for function in functions:
         assert isinstance(function, FunctionDefinition)
@@ -211,6 +211,17 @@ def test_function_parser_extra_nested_key() -> None:
             function_parser,
             DATA / "functions_definition_extra_nested_key.json",
         )
+
+
+def test_function_parser_empty_parameters() -> None:
+    """jambo jambo"""
+    functions = run_parser_test(
+        function_parser,
+        DATA / "functions_definition_empty_parameters.json",
+    )
+    assert isinstance(functions, list)
+    assert len(functions) > 0
+    assert any(function.parameters == {} for function in functions)
 
 
 VALID_FUNCTION_DEFINITION: dict = {

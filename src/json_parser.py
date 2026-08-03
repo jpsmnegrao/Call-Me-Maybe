@@ -32,11 +32,9 @@ def prompt_parser(filename: FilePath) -> list[Prompt]:
     with open(filename, 'r') as file:
         raw_prompts: list[dict] = json.load(file)
         if not isinstance(raw_prompts, list):
-            raise ValueError("Error parsing prompts file: expected a JSON "
-                             "array!")
+            raise ValueError("Expected a JSON array!")
         if not raw_prompts:
-            raise ValueError("Error parsing prompts file: empty file "
-                             "provided!")
+            raise ValueError("Empty file provided!")
         for prompt in raw_prompts:
             prompts.append(Prompt(**prompt))
     return prompts
@@ -66,11 +64,9 @@ def function_parser(filename: FilePath) -> list[FunctionDefinition]:
     with open(filename, 'r') as file:
         raw_funcs: list[dict] = json.load(file)
         if not isinstance(raw_funcs, list):
-            raise ValueError("Error parsing functions definition file: "
-                             "expected a JSON array!")
+            raise ValueError("Expected a JSON array!")
         if not raw_funcs:
-            raise ValueError("Error parsing functions definition file: empty "
-                             "file provided!")
+            raise ValueError("Empty file provided!")
         for function in raw_funcs:
             functions.append(FunctionDefinition(**function))
     return functions
