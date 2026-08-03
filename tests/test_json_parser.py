@@ -17,16 +17,19 @@ DATA = Path("tests/data")
 
 def run_parser_test(
         parser: Callable[[Path], list[Prompt] | list[FunctionDefinition]],
-        file_path: Path) -> list[Prompt] | list[FunctionDefinition]:
+        file_path: Path, label: str
+        ) -> list[Prompt] | list[FunctionDefinition]:
     try:
         result = parser(file_path)
         print("\n" + "=" * 70)
+        print(f"TEST: PARSER {label}")
         print(f"FILE: {file_path.name}")
         print("MESSAGE: No output produced (expected)")
         print("=" * 70)
         return result
     except Exception as error:
         print("\n" + "=" * 70)
+        print(f"TEST: PARSER {label}")
         print(f"FILE: {file_path.name}")
         print(f"ERROR TYPE: {type(error).__name__}")
         print("MESSAGE:")
@@ -47,6 +50,7 @@ def test_prompt_parser_valid() -> None:
         run_parser_test(
             prompt_parser,
             DATA / "function_calling_tests.json",
+            "valid",
         )
     )
     assert len(raw_prompts) == len(prompts)
@@ -64,6 +68,7 @@ def test_prompt_parser_file_not_found() -> None:
         run_parser_test(
             prompt_parser,
             DATA / "function_calling_tests_no_file.json",
+            "file_not_found",
         )
 
 
@@ -73,6 +78,7 @@ def test_prompt_parser_invalid_syntax() -> None:
         run_parser_test(
             prompt_parser,
             DATA / "function_calling_tests_invalid_syntax.json",
+            "invalid_syntax",
         )
 
 
@@ -82,6 +88,7 @@ def test_prompt_parser_empty_array() -> None:
         run_parser_test(
             prompt_parser,
             DATA / "function_calling_tests_empty_array.json",
+            "empty_array",
         )
 
 
@@ -91,6 +98,7 @@ def test_prompt_parser_not_array() -> None:
         run_parser_test(
             prompt_parser,
             DATA / "function_calling_tests_not_array.json",
+            "not_array",
         )
 
 
@@ -100,6 +108,7 @@ def test_prompt_parser_empty_key_value() -> None:
         run_parser_test(
             prompt_parser,
             DATA / "function_calling_tests_empty_key_value.json",
+            "empty_key_value",
         )
 
 
@@ -109,6 +118,7 @@ def test_prompt_parser_wrong_key() -> None:
         run_parser_test(
             prompt_parser,
             DATA / "function_calling_tests_wrong_key.json",
+            "wrong_key",
         )
 
 
@@ -118,6 +128,7 @@ def test_prompt_parser_invalid_data_type() -> None:
         run_parser_test(
             prompt_parser,
             DATA / "function_calling_tests_invalid_prompt_data_type.json",
+            "invalid_data_type",
         )
 
 
@@ -127,6 +138,7 @@ def test_prompt_parser_extra_key() -> None:
         run_parser_test(
             prompt_parser,
             DATA / "function_calling_tests_extra_key.json",
+            "extra_key",
         )
 
 
@@ -142,6 +154,7 @@ def test_function_parser_valid() -> None:
         run_parser_test(
             function_parser,
             DATA / "functions_definition.json",
+            "valid",
         )
     )
     assert len(raw_functions) == len(functions)
@@ -159,6 +172,7 @@ def test_function_parser_file_not_found() -> None:
         run_parser_test(
             function_parser,
             DATA / "functions_definition_no_file.json",
+            "file_not_found",
         )
 
 
@@ -168,6 +182,7 @@ def test_function_parser_invalid_syntax() -> None:
         run_parser_test(
             function_parser,
             DATA / "functions_definition_invalid_syntax.json",
+            "invalid_syntax",
         )
 
 
@@ -177,6 +192,7 @@ def test_function_parser_empty_array() -> None:
         run_parser_test(
             function_parser,
             DATA / "functions_definition_empty_array.json",
+            "empty_array",
         )
 
 
@@ -186,6 +202,7 @@ def test_function_parser_not_array() -> None:
         run_parser_test(
             function_parser,
             DATA / "functions_definition_not_array.json",
+            "not_array",
         )
 
 
@@ -195,6 +212,7 @@ def test_function_parser_wrong_key() -> None:
         run_parser_test(
             function_parser,
             DATA / "functions_definition_wrong_key.json",
+            "wrong_key",
         )
 
 
@@ -204,6 +222,7 @@ def test_function_parser_invalid_data_type() -> None:
         run_parser_test(
             function_parser,
             DATA / "functions_definition_invalid_function_data_type.json",
+            "invalid_data_type",
         )
 
 
@@ -213,6 +232,7 @@ def test_function_parser_extra_key() -> None:
         run_parser_test(
             function_parser,
             DATA / "functions_definition_extra_key.json",
+            "extra_key",
         )
 
 
@@ -222,6 +242,7 @@ def test_function_parser_extra_nested_key() -> None:
         run_parser_test(
             function_parser,
             DATA / "functions_definition_extra_nested_key.json",
+            "extra_nested_key",
         )
 
 
@@ -232,6 +253,7 @@ def test_function_parser_empty_parameters() -> None:
         run_parser_test(
             function_parser,
             DATA / "functions_definition_empty_parameters.json",
+            "empty_parameters",
         )
     )
     assert isinstance(functions, list)

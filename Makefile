@@ -45,5 +45,5 @@ test-silent:
 test-verbose:
 	uv run pytest -v
 
-test-displayerrors:
+test-errors:
 	uv run pytest -s -q

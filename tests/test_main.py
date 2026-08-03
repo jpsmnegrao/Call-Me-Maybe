@@ -24,7 +24,7 @@ DATA = Path("tests/data")
 
 def run_main_with_files(
         monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
-        input_file: Path, functions_file: Path) -> None:
+        input_file: Path, functions_file: Path, label: str) -> None:
     monkeypatch.setattr(
         sys,
         "argv",
@@ -43,7 +43,8 @@ def run_main_with_files(
     except SystemExit:
         output = capsys.readouterr().out.strip()
         print("\n" + "=" * 70)
-        print(f"INPUT:     {input_file.name}")
+        print(f"TEST: MAIN {label}")
+        print(f"INPUT: {input_file.name}")
         print(f"FUNCTIONS: {functions_file.name}")
         if output:
             print("MESSAGE:")
@@ -64,6 +65,7 @@ def test_main_clean_exit_on_prompt_file_not_found(
             capsys,
             DATA / "function_calling_tests_no_file.json",
             DATA / "functions_definition.json",
+            "prompt_file_not_found",
         )
 
 
@@ -77,6 +79,7 @@ def test_main_clean_exit_on_prompt_invalid_syntax(
             capsys,
             DATA / "function_calling_tests_invalid_syntax.json",
             DATA / "functions_definition.json",
+            "prompt_invalid_syntax",
         )
 
 
@@ -90,6 +93,7 @@ def test_main_clean_exit_on_prompt_validation_error(
             capsys,
             DATA / "function_calling_tests_wrong_key.json",
             DATA / "functions_definition.json",
+            "prompt_validation_error",
         )
 
 
@@ -103,6 +107,7 @@ def test_main_clean_exit_on_prompt_empty_file(
             capsys,
             DATA / "function_calling_tests_empty_array.json",
             DATA / "functions_definition.json",
+            "prompt_empty_file",
         )
 
 
@@ -116,6 +121,7 @@ def test_main_clean_exit_on_prompt_not_array(
             capsys,
             DATA / "function_calling_tests_not_array.json",
             DATA / "functions_definition.json",
+            "prompt_not_array",
         )
 
 
@@ -129,6 +135,7 @@ def test_main_clean_exit_on_function_file_not_found(
             capsys,
             DATA / "function_calling_tests.json",
             DATA / "functions_definition_no_file.json",
+            "function_file_not_found",
         )
 
 
@@ -142,6 +149,7 @@ def test_main_clean_exit_on_function_invalid_syntax(
             capsys,
             DATA / "function_calling_tests.json",
             DATA / "functions_definition_invalid_syntax.json",
+            "function_invalid_syntax",
         )
 
 
@@ -155,6 +163,7 @@ def test_main_clean_exit_on_function_validation_error(
             capsys,
             DATA / "function_calling_tests.json",
             DATA / "functions_definition_wrong_key.json",
+            "function_validation_error",
         )
 
 
@@ -168,6 +177,7 @@ def test_main_clean_exit_on_function_empty_file(
             capsys,
             DATA / "function_calling_tests.json",
             DATA / "functions_definition_empty_array.json",
+            "function_empty_file",
         )
 
 
@@ -181,4 +191,5 @@ def test_main_clean_exit_on_function_not_array(
             capsys,
             DATA / "function_calling_tests.json",
             DATA / "functions_definition_not_array.json",
+            "function_not_array",
         )

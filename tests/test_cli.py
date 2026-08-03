@@ -27,14 +27,14 @@ def run_cli_test(
     try:
         cli = parse_cli()
         print("\n" + "=" * 70)
-        print(f"TEST: {label}")
+        print(f"TEST: CLI {label}")
         print(f"ARGS: {args}")
         print("MESSAGE: No output produced (expected)")
         print("=" * 70)
         return cli
     except Exception as error:
         print("\n" + "=" * 70)
-        print(f"TEST: {label}")
+        print(f"TEST: CLI {label}")
         print(f"ARGS: {args}")
         print(f"ERROR TYPE: {type(error).__name__}")
         print("MESSAGE:")
