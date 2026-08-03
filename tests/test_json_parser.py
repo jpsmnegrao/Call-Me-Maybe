@@ -2,9 +2,32 @@
 
 import pytest
 import json
+from pathlib import Path
 from pydantic import ValidationError
-from schemas import Prompt, FunctionDefinition
-from json_parser import prompt_parser, function_parser
+from src.schemas import Prompt, FunctionDefinition
+from src.json_parser import prompt_parser, function_parser
+
+
+DATA = Path("tests/data")
+
+
+def run_parser_test(parser, file_path: Path):
+    try:
+        result = parser(file_path)
+        print("\n" + "=" * 70)
+        print(f"FILE: {file_path.name}")
+        print("MESSAGE: No output produced (expected)")
+        print("=" * 70)
+        return result
+    except Exception as error:
+        print("\n" + "=" * 70)
+        print(f"FILE: {file_path.name}")
+        print(f"ERROR TYPE: {type(error).__name__}")
+        print("MESSAGE:")
+        print(error)
+        print("=" * 70)
+        raise
+
 
 # PROMPT TESTING
 
@@ -13,8 +36,10 @@ def test_prompt_parser_valid() -> None:
     """amambo jambo"""
     with open("tests/data/function_calling_tests.json", 'r') as file:
         raw_prompts: list[dict] = json.load(file)
-    prompts: list[Prompt] = prompt_parser(
-        "tests/data/function_calling_tests.json")
+        prompts = run_parser_test(
+            prompt_parser,
+            DATA / "function_calling_tests.json",
+        )
     assert len(raw_prompts) == len(prompts)
     for prompt in prompts:
         assert isinstance(prompt, Prompt)
@@ -26,52 +51,75 @@ def test_prompt_parser_valid() -> None:
 
 def test_prompt_parser_file_not_found() -> None:
     """jambo jambo"""
-    with pytest.raises(FileNotFoundError) as error_info:
-        prompt_parser("tests/data/function_calling_tests_no_file.json")
-    print(str(error_info.value))
+    with pytest.raises(FileNotFoundError):
+        run_parser_test(
+            prompt_parser,
+            DATA / "function_calling_tests_no_file.json",
+        )
 
 
 def test_prompt_parser_invalid_syntax() -> None:
     """jambo jambo"""
     with pytest.raises(json.JSONDecodeError):
-        prompt_parser("tests/data/function_calling_tests_invalid_syntax.json")
+        run_parser_test(
+            prompt_parser,
+            DATA / "function_calling_tests_invalid_syntax.json",
+        )
 
 
 def test_prompt_parser_empty_array() -> None:
     """jambo jambo"""
     with pytest.raises(ValueError):
-        prompt_parser("tests/data/function_calling_tests_empty_array.json")
+        run_parser_test(
+            prompt_parser,
+            DATA / "function_calling_tests_empty_array.json",
+        )
 
 
 def test_prompt_parser_not_array() -> None:
     """jambo jambo"""
     with pytest.raises(ValueError):
-        prompt_parser("tests/data/function_calling_tests_not_array.json")
+        run_parser_test(
+            prompt_parser,
+            DATA / "function_calling_tests_not_array.json",
+        )
 
 
 def test_prompt_parser_empty_key_value() -> None:
     """jambo jambo"""
     with pytest.raises(ValidationError):
-        prompt_parser("tests/data/function_calling_tests_empty_key_value.json")
+        run_parser_test(
+            prompt_parser,
+            DATA / "function_calling_tests_empty_key_value.json",
+        )
 
 
 def test_prompt_parser_wrong_key() -> None:
     """jambo jambo"""
     with pytest.raises(ValidationError):
-        prompt_parser("tests/data/function_calling_tests_wrong_key.json")
+        run_parser_test(
+            prompt_parser,
+            DATA / "function_calling_tests_wrong_key.json",
+        )
 
 
 def test_prompt_parser_invalid_data_type() -> None:
     """jambo jambo"""
     with pytest.raises(ValidationError):
-        prompt_parser(
-            "tests/data/function_calling_tests_invalid_prompt_data_type.json")
+        run_parser_test(
+            prompt_parser,
+            DATA / "function_calling_tests_invalid_prompt_data_type.json",
+        )
 
 
 def test_prompt_parser_extra_key() -> None:
     """jambo jambo"""
     with pytest.raises(ValidationError):
-        prompt_parser("tests/data/function_calling_tests_extra_key.json")
+        run_parser_test(
+            prompt_parser,
+            DATA / "function_calling_tests_extra_key.json",
+        )
+
 
 # FUNCTION DEFINITION TESTING
 
@@ -80,8 +128,10 @@ def test_function_parser_valid() -> None:
     """amambo jambo"""
     with open("tests/data/functions_definition.json", 'r') as file:
         raw_functions: list[dict] = json.load(file)
-    functions: list[FunctionDefinition] = function_parser(
-        "tests/data/functions_definition.json")
+        functions: list[FunctionDefinition] = run_parser_test(
+            function_parser,
+            DATA / "functions_definition.json",
+        )
     assert len(raw_functions) == len(functions)
     for function in functions:
         assert isinstance(function, FunctionDefinition)
@@ -94,55 +144,73 @@ def test_function_parser_valid() -> None:
 def test_function_parser_file_not_found() -> None:
     """jambo jambo"""
     with pytest.raises(FileNotFoundError):
-        function_parser("tests/data/functions_definition_no_file.json")
+        run_parser_test(
+            function_parser,
+            DATA / "functions_definition_no_file.json",
+        )
 
 
 def test_function_parser_invalid_syntax() -> None:
     """jambo jambo"""
     with pytest.raises(json.JSONDecodeError):
-        function_parser(
-            "tests/data/functions_definition_invalid_syntax.json")
+        run_parser_test(
+            function_parser,
+            DATA / "functions_definition_invalid_syntax.json",
+        )
 
 
 def test_function_parser_empty_array() -> None:
     """jambo jambo"""
     with pytest.raises(ValueError):
-        function_parser(
-            "tests/data/functions_definition_empty_array.json")
+        run_parser_test(
+            function_parser,
+            DATA / "functions_definition_empty_array.json",
+        )
 
 
 def test_function_parser_not_array() -> None:
     """jambo jambo"""
     with pytest.raises(ValueError):
-        function_parser("tests/data/functions_definition_not_array.json")
+        run_parser_test(
+            function_parser,
+            DATA / "functions_definition_not_array.json",
+        )
 
 
 def test_function_parser_wrong_key() -> None:
     """jambo jambo"""
     with pytest.raises(ValidationError):
-        function_parser("tests/data/functions_definition_wrong_key.json")
+        run_parser_test(
+            function_parser,
+            DATA / "functions_definition_wrong_key.json",
+        )
 
 
 def test_function_parser_invalid_data_type() -> None:
     """jambo jambo"""
     with pytest.raises(ValidationError):
-        function_parser(
-            "tests/data/functions_definition_invalid_function_data"
-            "_type.json"
+        run_parser_test(
+            function_parser,
+            DATA / "functions_definition_invalid_function_data_type.json",
         )
 
 
 def test_function_parser_extra_key() -> None:
     """jambo jambo"""
     with pytest.raises(ValidationError):
-        function_parser("tests/data/functions_definition_extra_key.json")
+        run_parser_test(
+            function_parser,
+            DATA / "functions_definition_extra_key.json",
+        )
 
 
 def test_function_parser_extra_nested_key() -> None:
     """jambo jambo"""
     with pytest.raises(ValidationError):
-        function_parser(
-            "tests/data/functions_definition_extra_nested_key.json")
+        run_parser_test(
+            function_parser,
+            DATA / "functions_definition_extra_nested_key.json",
+        )
 
 
 VALID_FUNCTION_DEFINITION: dict = {

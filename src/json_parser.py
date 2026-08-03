@@ -6,10 +6,11 @@ each entry against the corresponding pydantic schema.
 """
 
 import json
-from schemas import Prompt, FunctionDefinition
+from .schemas import Prompt, FunctionDefinition
+from pydantic import FilePath
 
 
-def prompt_parser(filename: str) -> list[Prompt]:
+def prompt_parser(filename: FilePath) -> list[Prompt]:
     """Load and validate a list of prompts from a JSON file.
 
     Reads the given file, parses its content as JSON, and validates each entry
@@ -31,15 +32,17 @@ def prompt_parser(filename: str) -> list[Prompt]:
     with open(filename, 'r') as file:
         raw_prompts: list[dict] = json.load(file)
         if not isinstance(raw_prompts, list):
-            raise ValueError("Expected a JSON array!")
+            raise ValueError("Error parsing prompts file: expected a JSON "
+                             "array!")
         if not raw_prompts:
-            raise ValueError("Empty file provided!")
+            raise ValueError("Error parsing prompts file: empty file "
+                             "provided!")
         for prompt in raw_prompts:
             prompts.append(Prompt(**prompt))
     return prompts
 
 
-def function_parser(filename: str) -> list[FunctionDefinition]:
+def function_parser(filename: FilePath) -> list[FunctionDefinition]:
     """Load and validate a list of function definitions from a JSON file.
 
     Reads the given file, parses its content as JSON, and validates each entry
@@ -63,9 +66,11 @@ def function_parser(filename: str) -> list[FunctionDefinition]:
     with open(filename, 'r') as file:
         raw_funcs: list[dict] = json.load(file)
         if not isinstance(raw_funcs, list):
-            raise ValueError("Expected a JSON array!")
+            raise ValueError("Error parsing functions definition file: "
+                             "expected a JSON array!")
         if not raw_funcs:
-            raise ValueError("Empty file provided!")
+            raise ValueError("Error parsing functions definition file: empty "
+                             "file provided!")
         for function in raw_funcs:
             functions.append(FunctionDefinition(**function))
     return functions

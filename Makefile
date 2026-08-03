@@ -1,4 +1,4 @@
-.PHONY: install run debug clean lint lint-strict test
+.PHONY: install run debug clean lint lint-strict fclean test
 
 all: install
 
@@ -7,25 +7,21 @@ install:
 	@echo "=== Installation complete! ==="
 
 run:
-	uv run python -m src --functions_definition	\
-	data/input/functions_definition.json --input	\
-	data/input/function_calling_tests.json	\
-	--output data/output/function_calls.json
+	uv run python -m src \
+		--functions_definition	data/input/functions_definition.json \
+		--input	data/input/function_calling_tests.json	\
+		--output data/output/function_calls.json
 
 debug:
-	uv run python -m pdb -m src -- --functions_definition	\
-	data/input/functions_definition.json --input	\
-	data/input/function_calling_tests.json	\
-	--output data/output/function_calls.json
+	uv run python -m pdb -m src -- \
+		--functions_definition	data/input/functions_definition.json \
+		--input	data/input/function_calling_tests.json	\
+		--output data/output/function_calls.json
 
 clean:
 	@rm -rf .mypy_cache .pytest_cache/ ; \
 	find . -type d -name "__pycache__" -exec rm -rf {} + ; \
 	echo "Cleanup complete!"; \
-
-fclean: clean
-	@rm -rf .venv
-	@echo "Removed virtual environment - deep clean complete!"
 
 lint:
 	uv run flake8 .
@@ -36,8 +32,15 @@ lint-strict:
 	uv run flake8 .
 	uv run mypy . --strict
 
+fclean: clean
+	@rm -rf .venv
+	@echo "Removed virtual environment - deep clean complete!"
+
 test:
+	uv run pytest
+
+test-verbose:
 	uv run pytest -v
 
-test-silent:
-	uv run pytest -q --tb=no -s
+test-displayerrors:
+	uv run pytest -s -q

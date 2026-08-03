@@ -4,39 +4,46 @@
 import json
 import sys
 from pydantic import ValidationError
-from schemas import Prompt, FunctionDefinition
-from json_parser import prompt_parser, function_parser
+from .schemas import Prompt, FunctionDefinition
+from .json_parser import prompt_parser, function_parser
+from .cli import CLIError, parse_cli
 
 
 def main() -> None:
     """mambo"""
     try:
-        prompts: list[Prompt] = prompt_parser(
-            "data/input/function_calling_tests.json")
-    except FileNotFoundError:
-        print("File not found!")
+        cli = parse_cli()
+    except CLIError as error:
+        print(f"Command-line error: {error}")
         sys.exit(1)
-    except json.JSONDecodeError:
-        print("Invalid json format!")
-        sys.exit(1)
-    except ValidationError:
-        print("Prompt entry does not match the expected format!")
-        sys.exit(1)
-    except ValueError as error:
-        print(error)
+    except ValidationError as error:
+        print(f"Invalid command-line arguments: {error}")
         sys.exit(1)
     try:
-        functions: list[FunctionDefinition] = function_parser(
-            "data/input/functions_definition.json")
+        prompts: list[Prompt] = prompt_parser(cli.input)
     except FileNotFoundError:
-        print("File not found!")
+        print("Error reading prompts file: file not found!")
         sys.exit(1)
     except json.JSONDecodeError:
-        print("Invalid json format!")
+        print("Error reading prompts file: invalid JSON format!")
         sys.exit(1)
-    except ValidationError:
-        print("Function entry does not match the expected format!")
+    except ValidationError as error:
+        print(f"Error reading prompts file: {error}")
         sys.exit(1)
     except ValueError as error:
-        print(error)
+        print(f"Error reading prompts file: {error}")
+        sys.exit(1)
+    try:
+        functions: list[FunctionDefinition] = function_parser(cli.functions)
+    except FileNotFoundError:
+        print("Error reading functions definition file: file not found!")
+        sys.exit(1)
+    except json.JSONDecodeError:
+        print("Error reading functions definition file: invalid JSON format!")
+        sys.exit(1)
+    except ValidationError as error:
+        print(f"Error reading functions definition file: {error}")
+        sys.exit(1)
+    except ValueError as error:
+        print(f"Error reading functions definition file: {error}")
         sys.exit(1)
