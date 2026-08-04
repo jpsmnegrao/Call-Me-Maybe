@@ -1,8 +1,8 @@
 """JSON parsing and validation utilities.
 
-This module reads the two mandatory input files (function calling test prompts
-and function definitions) from disk, parses their JSON content, and validates
-each entry against the corresponding pydantic schema.
+This module loads the two mandatory JSON input files (prompts and function
+definitions), parses their contents, and validates each entry against the
+corresponding Pydantic schema.
 """
 
 import json
@@ -27,7 +27,8 @@ def prompt_parser(filename: FilePath) -> list[Prompt]:
         FileNotFoundError: If the file does not exist.
         json.JSONDecodeError: If the file does not contain valid JSON.
         ValidationError: If an entry does not match the expected Prompt schema.
-        ValueError: If the file contains an empty array.
+        ValueError: If the file does not contain a JSON array, or the array is
+            empty.
     """
     prompts: list[Prompt] = []
     with open(filename, 'r') as file:
@@ -59,7 +60,8 @@ def function_parser(filename: FilePath) -> list[FunctionDefinition]:
         json.JSONDecodeError: If the file does not contain valid JSON.
         ValidationError: If an entry does not match the expected
             FunctionDefinition schema.
-        ValueError: If the file contains an empty array.
+        ValueError: If the file does not contain a JSON array, or the array is
+            empty.
     """
     functions: list[FunctionDefinition] = []
     with open(filename, 'r') as file:

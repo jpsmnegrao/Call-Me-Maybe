@@ -1,7 +1,7 @@
 """mambo jambo"""
 
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from typing import Literal
 
 
@@ -20,10 +20,20 @@ class ParameterInfo(BaseModel):
 class FunctionDefinition(BaseModel):
     """mambo"""
     model_config = {"extra": "forbid"}
-    name: str
+    name: str = Field(min_length=1)
     description: str
     parameters: dict[str, ParameterInfo]
     returns: ParameterInfo
+
+    @field_validator("parameters")
+    @classmethod
+    def reject_empty_parameter_names(
+            cls, value: dict[str, ParameterInfo]
+    ) -> dict[str, ParameterInfo]:
+        """Reject any parameter whose key is an empty string."""
+        if any(key == "" for key in value):
+            raise ValueError("Parameter names must not be empty!")
+        return value
 
 
 class Output(BaseModel):

@@ -281,3 +281,22 @@ def test_function_definition_missing_required_field(
     del incomplete[missing_field]
     with pytest.raises(ValidationError):
         FunctionDefinition(**incomplete)
+
+
+def test_function_definition_empty_name() -> None:
+    """jambo jambo"""
+    invalid = VALID_FUNCTION_DEFINITION.copy()
+    invalid["name"] = ""
+    with pytest.raises(ValidationError):
+        FunctionDefinition(**invalid)
+
+
+def test_function_definition_empty_parameter_key() -> None:
+    """jambo jambo"""
+    invalid = VALID_FUNCTION_DEFINITION.copy()
+    invalid["parameters"] = {
+        "": {"type": "number"},
+        "b": {"type": "number"},
+    }
+    with pytest.raises(ValidationError):
+        FunctionDefinition(**invalid)
