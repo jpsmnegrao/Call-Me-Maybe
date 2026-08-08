@@ -12,8 +12,12 @@ def literals_encoder(model: Small_LLM_Model) -> dict[str, list[int]]:
     literals: dict[str, str] = {
         "lit_open": '[',
         "lit_prompt": '{"prompt": "',
-        "lit_name": '", "name": ',
+        "lit_name": '", "name": "',
+        "lit_name_close": '"',
         "lit_parameters": ', "parameters": {',
+        "lit_key_open": '"',
+        "lit_key_close": '": ',
+        "lit_comma": ', ',
         "lit_close_entry": '}}',
         "lit_close": ']',
     }
@@ -122,67 +126,111 @@ def emit_function_name(
 def emit_number(
         model: Small_LLM_Model, output_tokens: list[int],
         digit_tokens: dict[str, int], terminators: set[int],
-        max_tokens: int = 20) -> None:
+        max_tokens: int = 20) -> float:
     """mambo"""
-    legal = set(digit_tokens.values()) | terminators
+    start = len(output_tokens)
+    digits = set(digit_tokens.values())
     for _ in range(max_tokens):
         logits = model.get_logits_from_input_ids(output_tokens)
+        unconstrained_choice = max(range(len(logits)), key=lambda i: logits[i])
         masked = [-1e30] * len(logits)
-        for token_id in legal:
-            masked[token_id] = logits[token_id]
-        max_token = list(legal)[0]
-        max_value = masked[max_token]
-        for i in legal:
-            if masked[i] > max_value:
-                max_value = masked[i]
-                max_token = i
-        output_tokens.append(max_token)
-        if max_token in terminators:
+        if unconstrained_choice in digits:
+            masked = [-1e30] * len(logits)
+            for token_id in digits:
+                masked[token_id] = logits[token_id]
+            token = max(digits, key=lambda i: masked[i])
+            output_tokens.append(token)
+        else:
+            masked = [-1e30] * len(logits)
+            for token_id in terminators:
+                masked[token_id] = logits[token_id]
+            token = max(terminators, key=lambda i: masked[i])
+            output_tokens.append(token)
             break
+    generated_tokens = output_tokens[start:-1]
+    number_str = model.decode(generated_tokens)
+    return float(number_str)
 
 
 def emit_string(
-        model: Small_LLM_Model, output_tokens: list[int], legal: set[int],
-        terminators: set[int], max_tokens: int = 100
-        ) -> None:
+        model: Small_LLM_Model, output_tokens: list[int],
+        string_tokens: set[int], terminators: set[int], max_tokens: int = 100
+        ) -> str:
     """mambo"""
+    start = len(output_tokens)
     for _ in range(max_tokens):
         logits = model.get_logits_from_input_ids(output_tokens)
-        masked = [-1e30] * len(logits)
-        for token_id in legal:
-            masked[token_id] = logits[token_id]
-        token = max(legal, key=lambda i: logits[i])
-        output_tokens.append(token)
-        if token in terminators:
+        unconstrained_choice = max(range(len(logits)), key=lambda i: logits[i])
+        if unconstrained_choice in string_tokens:
+            masked = [-1e30] * len(logits)
+            for token_id in string_tokens:
+                masked[token_id] = logits[token_id]
+            token = max(string_tokens, key=lambda i: masked[i])
+            output_tokens.append(token)
+        else:
+            masked = [-1e30] * len(logits)
+            for token_id in terminators:
+                masked[token_id] = logits[token_id]
+            token = max(terminators, key=lambda i: masked[i])
+            output_tokens.append(token)
+            print("chose terminator:", token, repr(model.decode([token])))
             break
+    generated_tokens = output_tokens[start:-1]
+    return model.decode(generated_tokens)
 
 
 def emit_boolean(
         model: Small_LLM_Model, output_tokens: list[int],
         bool_tokens: dict[str, list[int]]
-        ) -> None:
+        ) -> bool:
     """mambo"""
     true_tokens = bool_tokens["true"]
     false_tokens = bool_tokens["false"]
     logits = model.get_logits_from_input_ids(output_tokens)
     true_score = logits[true_tokens[0]]
     false_score = logits[false_tokens[0]]
+    is_true = true_score > false_score
     chosen = true_tokens if true_score > false_score else false_tokens
     output_tokens.extend(chosen)
+    return is_true
 
 
 def emit_parameter_type(
         param_type: str, model: Small_LLM_Model, output_tokens: list[int],
         digit_tokens: dict[str, int], bool_tokens: dict[str, list[int]],
         string_tokens: set[int]
-        ) -> None:
+        ) -> float | str | bool:
     """hambo"""
+    print(repr(param_type))
     if param_type == "number":
         terminators = encode_terminators(model, [",", "}", "]"])
-        emit_number(model, output_tokens, digit_tokens, terminators)
+        return emit_number(model, output_tokens, digit_tokens, terminators)
     elif param_type == "string":
         terminators = encode_terminators(model, ['"'])
         terminators = encode_terminators(model, ['"'])
-        emit_string(model, output_tokens, string_tokens, terminators)
+        return emit_string(model, output_tokens, string_tokens, terminators)
     elif param_type == "boolean":
-        emit_boolean(model, output_tokens, bool_tokens)
+        return emit_boolean(model, output_tokens, bool_tokens)
+    raise ValueError(f"Unknown parameter type: {param_type}")
+
+
+def build_prompt_text(
+        prompt: Prompt, functions: list[FunctionDefinition]) -> str:
+    """mambo"""
+    lines = [
+        "Chooose a function for each prompt given.",
+        "Identify the correct arguments and their values from the prompt.",
+        "",
+        "Available functions:",
+    ]
+    for function in functions:
+        param_list = ", ".join(
+            f"{name}: {info.type}"
+            for name, info in function.parameters.items()
+        )
+        lines.append(
+            f"- {function.name}({param_list}): {function.description}"
+        )
+    lines.append("")
+    lines.append(f"Request: {prompt.prompt}")
+    return "\n".join(lines)

@@ -34,4 +34,6 @@ def main() -> None:
     except (ValidationError, ValueError) as error:
         print(f"Error reading functions definition file: {error}")
         sys.exit(1)
-    run_pipeline(prompts, functions)
+    results = run_pipeline(prompts, functions)
+    for result in results:
+        print(result)
