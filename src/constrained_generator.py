@@ -1,6 +1,7 @@
 """mambo jambo"""
 
 
+import json
 from llm_sdk import Small_LLM_Model  # type: ignore
 from .schemas import FunctionDefinition, Prompt
 from .trie import Trie
@@ -22,8 +23,7 @@ def literals_encoder(model: Small_LLM_Model) -> dict[str, list[int]]:
     return encoded_lits
 
 
-def encode_number(
-        model: Small_LLM_Model, output_tokens: list[int]) -> dict[str, int]:
+def encode_numbers(model: Small_LLM_Model) -> dict[str, int]:
     """mambo"""
     digit_strings = [
         "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "-"]
@@ -78,6 +78,18 @@ def parameters_encoder(
     return encoded_paramaters
 
 
+def build_string_tokens(model: Small_LLM_Model) -> set[int]:
+    """mambo"""
+    vocab_path = model.get_path_to_vocab_file()
+    with open(vocab_path, "r") as file:
+        vocab: dict[str, int] = json.load(file)
+    legal: set[int] = set()
+    for token_str, token_id in vocab.items():
+        if '"' not in token_str:
+            legal.add(token_id)
+    return legal
+
+
 def emit_json_skeleton(encoded_lits: dict[str, list[int]]) -> list[int]:
     """jambo"""
     json_output: list[int] = []
@@ -91,7 +103,7 @@ def emit_json_skeleton(encoded_lits: dict[str, list[int]]) -> list[int]:
 
 
 def emit_function_name(
-        trie: Trie, model: Small_LLM_Model, output_tokens: list[int]) -> None:
+        trie: Trie, model: Small_LLM_Model, output_tokens: list[int]) -> str:
     """hambo"""
     node = trie.root
     while not node.finished:
@@ -103,14 +115,17 @@ def emit_function_name(
         max_token = max(allowed, key=lambda i: masked[i])
         output_tokens.append(max_token)
         node = node.children[max_token]
+    assert node.name is not None
+    return node.name
 
 
 def emit_number(
         model: Small_LLM_Model, output_tokens: list[int],
-        digit_tokens: dict[str, int], terminators: set[int]) -> None:
+        digit_tokens: dict[str, int], terminators: set[int],
+        max_tokens: int = 20) -> None:
     """mambo"""
     legal = set(digit_tokens.values()) | terminators
-    while True:
+    for _ in range(max_tokens):
         logits = model.get_logits_from_input_ids(output_tokens)
         masked = [-1e30] * len(logits)
         for token_id in legal:
@@ -120,23 +135,26 @@ def emit_number(
         for i in legal:
             if masked[i] > max_value:
                 max_value = masked[i]
-                max_token = 1
+                max_token = i
         output_tokens.append(max_token)
         if max_token in terminators:
             break
 
 
 def emit_string(
-        model: Small_LLM_Model, output_tokens: list[int], terminators: set[int]
+        model: Small_LLM_Model, output_tokens: list[int], legal: set[int],
+        terminators: set[int], max_tokens: int = 100
         ) -> None:
     """mambo"""
-    while True:
+    for _ in range(max_tokens):
         logits = model.get_logits_from_input_ids(output_tokens)
-        token = max(range(len(logits)), key=lambda i: logits[i])
-        if token in terminators:
-            output_tokens.append(token)
-            break
+        masked = [-1e30] * len(logits)
+        for token_id in legal:
+            masked[token_id] = logits[token_id]
+        token = max(legal, key=lambda i: logits[i])
         output_tokens.append(token)
+        if token in terminators:
+            break
 
 
 def emit_boolean(
@@ -156,14 +174,15 @@ def emit_boolean(
 def emit_parameter_type(
         param_type: str, model: Small_LLM_Model, output_tokens: list[int],
         digit_tokens: dict[str, int], bool_tokens: dict[str, list[int]],
+        string_tokens: set[int]
         ) -> None:
     """hambo"""
     if param_type == "number":
         terminators = encode_terminators(model, [",", "}", "]"])
         emit_number(model, output_tokens, digit_tokens, terminators)
-    terminators = encode_terminators(model, ['"'])
-    if param_type == "string":
+    elif param_type == "string":
         terminators = encode_terminators(model, ['"'])
-        emit_string(model, output_tokens, terminators)
-    if param_type == "boolean":
+        terminators = encode_terminators(model, ['"'])
+        emit_string(model, output_tokens, string_tokens, terminators)
+    elif param_type == "boolean":
         emit_boolean(model, output_tokens, bool_tokens)

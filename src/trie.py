@@ -11,13 +11,14 @@ class TrieNode(BaseModel):
     """mambo"""
     children: dict[int, TrieNode] = Field(default_factory=dict)
     finished: bool = False
+    name: str | None = None
 
 
 class Trie(BaseModel):
     """mambo jambo"""
     root: TrieNode = Field(default_factory=TrieNode)
 
-    def insert(self, token_ids: list[int]) -> None:
+    def insert(self, token_ids: list[int], name: str) -> None:
         """mambo"""
         current = self.root
         for id in token_ids:
@@ -25,6 +26,7 @@ class Trie(BaseModel):
                 current.children[id] = TrieNode()
             current = current.children[id]
         current.finished = True
+        current.name = name
 
     def next_tokens(self, current: TrieNode) -> set[int]:
         """jambo"""
@@ -36,5 +38,5 @@ def build_trie(functions: list[str], model: Small_LLM_Model) -> Trie:
     trie = Trie()
     for function in functions:
         token_ids: list[int] = model.encode(function).tolist()[0]
-        trie.insert(token_ids)
+        trie.insert(token_ids, function)
     return trie

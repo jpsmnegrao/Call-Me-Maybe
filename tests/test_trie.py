@@ -6,7 +6,7 @@ from src.trie import Trie
 def test_insert_marks_correct_node_finished() -> None:
     """jambo"""
     trie = Trie()
-    trie.insert([1, 2, 3])
+    trie.insert([1, 2, 3], "fn_test")
 
     after_first = trie.root.children[1]
     after_second = after_first.children[2]
@@ -20,8 +20,8 @@ def test_insert_marks_correct_node_finished() -> None:
 def test_insert_shares_common_prefix() -> None:
     """jambo"""
     trie = Trie()
-    trie.insert([1, 2, 3])
-    trie.insert([1, 4, 5])
+    trie.insert([1, 2, 3], "fn_test")
+    trie.insert([1, 4, 5], "fn_test")
 
     assert set(trie.root.children.keys()) == {1}
     shared_node = trie.root.children[1]
@@ -31,8 +31,8 @@ def test_insert_shares_common_prefix() -> None:
 def test_legal_next_tokens_at_branch_point() -> None:
     """jambo"""
     trie = Trie()
-    trie.insert([1, 2, 3])
-    trie.insert([1, 4, 5])
+    trie.insert([1, 2, 3], "fn_test")
+    trie.insert([1, 4, 5], "fn_test")
 
     shared_node = trie.root.children[1]
     assert trie.next_tokens(shared_node) == {2, 4}
@@ -41,7 +41,17 @@ def test_legal_next_tokens_at_branch_point() -> None:
 def test_legal_next_tokens_returns_empty_set_at_leaf() -> None:
     """jambo"""
     trie = Trie()
-    trie.insert([1, 2, 3])
+    trie.insert([1, 2, 3], "fn_test")
 
     leaf_node = trie.root.children[1].children[2].children[3]
     assert trie.next_tokens(leaf_node) == set()
+
+
+def test_insert_stores_name_at_finished_node() -> None:
+    """jambo"""
+    trie = Trie()
+    trie.insert([1, 2, 3], "fn_test")
+
+    leaf_node = trie.root.children[1].children[2].children[3]
+    assert leaf_node.finished is True
+    assert leaf_node.name == "fn_test"
