@@ -32,7 +32,6 @@ def run_pipeline(
     for prompt in prompts:
         prompt_text = build_prompt_text(prompt, functions)
         string_candidates = extract_string_candidates(prompt.prompt)
-        string_trie = build_string_trie(string_candidates, model)
         output_tokens: list[int] = model.encode(prompt_text).tolist()[0]
         output_tokens.extend(encoded_lits["lit_open"])
         output_tokens.extend(encoded_lits["lit_prompt"])
@@ -70,7 +69,7 @@ def run_pipeline(
             else:
                 value = emit_parameter_type(
                     param_info.type, model, output_tokens, digit_tokens,
-                    bool_tokens, string_trie)
+                    bool_tokens, None)
             parameter_values[param_name] = value
             if i < len(param_items) - 1:
                 output_tokens.extend(encoded_lits["lit_comma"])

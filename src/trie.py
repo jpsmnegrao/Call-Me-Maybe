@@ -21,16 +21,12 @@ class Trie(BaseModel):
     def insert(self, token_ids: list[int], name: str) -> None:
         """mambo"""
         current = self.root
-        for id in token_ids:
-            if id not in current.children:
-                current.children[id] = TrieNode()
-            current = current.children[id]
+        for token_id in token_ids:
+            if token_id not in current.children:
+                current.children[token_id] = TrieNode()
+            current = current.children[token_id]
         current.finished = True
         current.name = name
-
-    def next_tokens(self, current: TrieNode) -> set[int]:
-        """jambo"""
-        return set(current.children.keys())
 
 
 def build_trie(functions: list[str], model: Small_LLM_Model) -> Trie:

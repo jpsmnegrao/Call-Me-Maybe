@@ -1,4 +1,5 @@
-.PHONY: install run debug clean lint lint-strict fclean test
+.PHONY: install run debug clean lint lint-strict fclean test test-silent,
+		test-verbose, test-errors
 
 all: install
 
@@ -10,13 +11,13 @@ run:
 	uv run python -m src \
 		--functions_definition	data/input/functions_definition.json \
 		--input	data/input/function_calling_tests.json	\
-		--output data/output/function_calls.json
+		--output data/output/function_calling_results.json
 
 debug:
 	uv run python -m pdb -m src -- \
 		--functions_definition	data/input/functions_definition.json \
 		--input	data/input/function_calling_tests.json	\
-		--output data/output/function_calls.json
+		--output data/output/function_calling_results.json
 
 clean:
 	@rm -rf .mypy_cache .pytest_cache/ ; \

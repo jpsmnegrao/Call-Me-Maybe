@@ -15,8 +15,6 @@ def literals_encoder(model: Small_LLM_Model) -> dict[str, list[int]]:
         "lit_name": '", "name": "',
         "lit_name_close": '"',
         "lit_parameters": ', "parameters": {',
-        "lit_key_open": '"',
-        "lit_key_close": '": ',
         "lit_comma": ', ',
         "lit_close_entry": '}}',
         "lit_close": ']',
@@ -49,14 +47,24 @@ def encode_terminators(
 
 
 def extract_string_candidates(prompt: str) -> list[str]:
-    """Extract plausible string values from a prompt."""
+    """Extract plausible string values from a prompt.
+
+    Returns quoted substrings and unquoted capitalized words (likely
+    proper nouns) as candidates. Falls back to the last word in the
+    prompt if nothing else matches.
+    """
+    # Capture the content between any pair of quote characters
     quoted = re.findall(r"""["']([^"']*)["']""", prompt)
+    # Blank out quoted spans so they aren't re-matched below
     text_without_quotes = re.sub(r"""["'][^"']*["']""", " ", prompt)
+    # Capture capitalized words not at the start of the sentence
     capitalized_words = re.findall(
         r"(?<!^)(?<!\. )\b[A-Z][a-zA-Z0-9_]*\b", text_without_quotes)
     candidates = quoted + capitalized_words
     if candidates:
         return list(dict.fromkeys(candidates))
+    # Fallback: no quoted or capitalized candidates found at all,
+    # so just grab the last word in the prompt as a last resort
     words = re.findall(r"\b[A-Za-z][A-Za-z0-9_]*\b", prompt)
     return list(dict.fromkeys(words[-1:]))
 
@@ -97,7 +105,6 @@ def emit_number(
     for _ in range(max_tokens):
         logits = model.get_logits_from_input_ids(output_tokens)
         unconstrained_choice = max(range(len(logits)), key=lambda i: logits[i])
-        masked = [-1e30] * len(logits)
         if unconstrained_choice in digits:
             masked = [-1e30] * len(logits)
             for token_id in digits:
@@ -143,8 +150,8 @@ def emit_boolean(
     logits = model.get_logits_from_input_ids(output_tokens)
     true_score = logits[true_tokens[0]]
     false_score = logits[false_tokens[0]]
-    is_true = true_score > false_score
-    chosen = true_tokens if true_score > false_score else false_tokens
+    is_true = bool(true_score > false_score)
+    chosen = true_tokens if is_true else false_tokens
     output_tokens.extend(chosen)
     return is_true
 
@@ -152,12 +159,14 @@ def emit_boolean(
 def emit_parameter_type(
         param_type: str, model: Small_LLM_Model, output_tokens: list[int],
         digit_tokens: dict[str, int], bool_tokens: dict[str, list[int]],
-        string_trie: Trie) -> float | str | bool:
+        string_trie: Trie | None) -> float | str | bool:
     """hambo"""
     if param_type == "number":
-        terminators = encode_terminators(model, [",", "}", "]"])
+        terminators = encode_terminators(model, [",", "}"])
         return emit_number(model, output_tokens, digit_tokens, terminators)
     elif param_type == "string":
+        if string_trie is None:
+            raise ValueError("String parameter requires a string_trie!")
         return emit_string(
             model, output_tokens, string_trie,
             encode_terminators(model, ['"']))
@@ -170,7 +179,7 @@ def build_prompt_text(
         prompt: Prompt, functions: list[FunctionDefinition]) -> str:
     """mambo"""
     lines = [
-        "Chooose a function for each prompt given.",
+        "Choose a function for each prompt given.",
         "Extract the correct arguments and their values from the prompt.",
         "",
         "Available functions:",
