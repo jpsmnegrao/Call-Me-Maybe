@@ -2,16 +2,18 @@
 
 import pytest
 from llm_sdk import Small_LLM_Model  # type: ignore[attr-defined]
-from src.trie import build_trie
-from src.constrained_generator import (
+from src.trie import build_trie, TrieNode
+from src.token_setup import (
     literals_encoder,
     encode_numbers,
     encode_terminators,
+    build_string_trie
+)
+from src.constrained_generator import (
     emit_number,
     emit_string,
     emit_boolean,
     emit_function_name,
-    build_string_trie
 )
 
 
@@ -19,6 +21,11 @@ from src.constrained_generator import (
 def model() -> Small_LLM_Model:
     """Load the model once for the whole test module (expensive)."""
     return Small_LLM_Model()
+
+
+def next_tokens(self, node: TrieNode) -> set[int]:
+    """Return the token IDs that can legally follow this node."""
+    return set(node.children.keys())
 
 
 # ENCODER TESTS (deterministic, no model judgment involved)
