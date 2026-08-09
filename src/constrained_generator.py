@@ -1,7 +1,7 @@
 """mambo jambo"""
 
 
-import json
+import re
 from llm_sdk import Small_LLM_Model  # type: ignore
 from .schemas import FunctionDefinition, Prompt
 from .trie import Trie
@@ -48,62 +48,26 @@ def encode_terminators(
     return terminators
 
 
-def prompt_encoder(
-        prompts: list[Prompt], model: Small_LLM_Model
-        ) -> dict[str, list[int]]:
-    """mambo"""
-    encoded_prompts: dict[str, list[int]] = {}
-    for item in prompts:
-        prompt = item.prompt
-        encoded_prompts["prompt"] = model.encode(prompt).tolist()[0]
-    return encoded_prompts
+def extract_string_candidates(prompt: str) -> list[str]:
+    """Extract plausible string values from a prompt."""
+    quoted = re.findall(r"""["']([^"']*)["']""", prompt)
+    text_without_quotes = re.sub(r"""["'][^"']*["']""", " ", prompt)
+    capitalized_words = re.findall(
+        r"(?<!^)(?<!\. )\b[A-Z][a-zA-Z0-9_]*\b", text_without_quotes)
+    candidates = quoted + capitalized_words
+    if candidates:
+        return list(dict.fromkeys(candidates))
+    words = re.findall(r"\b[A-Za-z][A-Za-z0-9_]*\b", prompt)
+    return list(dict.fromkeys(words[-1:]))
 
 
-def func_names_encoder(
-        functions: list[FunctionDefinition], model: Small_LLM_Model
-        ) -> dict[str, list[int]]:
-    """mambo"""
-    encoded_func_names: dict[str, list[int]] = {}
-    for function in functions:
-        name = function.name
-        encoded_func_names[name] = model.encode(name).tolist()[0]
-    return encoded_func_names
-
-
-def parameters_encoder(
-        functions: list[FunctionDefinition], model: Small_LLM_Model
-        ) -> dict[str, list[int]]:
-    """mambo"""
-    encoded_paramaters: dict[str, list[int]] = {}
-    for function in functions:
-        for key in function.parameters:
-            if key not in encoded_paramaters:
-                encoded_paramaters[key] = model.encode(key).tolist()[0]
-    return encoded_paramaters
-
-
-def build_string_tokens(model: Small_LLM_Model) -> set[int]:
-    """mambo"""
-    vocab_path = model.get_path_to_vocab_file()
-    with open(vocab_path, "r") as file:
-        vocab: dict[str, int] = json.load(file)
-    legal: set[int] = set()
-    for token_str, token_id in vocab.items():
-        if '"' not in token_str:
-            legal.add(token_id)
-    return legal
-
-
-def emit_json_skeleton(encoded_lits: dict[str, list[int]]) -> list[int]:
-    """jambo"""
-    json_output: list[int] = []
-    json_output.extend(encoded_lits["lit_open"])
-    json_output.extend(encoded_lits["lit_prompt"])
-    json_output.extend(encoded_lits["lit_name"])
-    json_output.extend(encoded_lits["lit_parameters"])
-    json_output.extend(encoded_lits["lit_close_entry"])
-    json_output.extend(encoded_lits["lit_close"])
-    return json_output
+def build_string_trie(candidates: list[str], model: Small_LLM_Model) -> Trie:
+    """Build a trie containing complete string candidates."""
+    trie = Trie()
+    for candidate in candidates:
+        token_ids = model.encode(candidate).tolist()[0]
+        trie.insert(token_ids, candidate)
+    return trie
 
 
 def emit_function_name(
@@ -153,36 +117,26 @@ def emit_number(
 
 
 def emit_string(
-        model: Small_LLM_Model, output_tokens: list[int],
-        string_tokens: set[int], terminators: set[int], max_tokens: int = 100
-        ) -> str:
-    """mambo"""
-    start = len(output_tokens)
-    for _ in range(max_tokens):
+        model: Small_LLM_Model, output_tokens: list[int], trie: Trie,
+        terminators: set[int], max_tokens: int = 20) -> str:
+    """Generate one complete string candidate from a trie."""
+    node = trie.root
+    while not node.finished:
         logits = model.get_logits_from_input_ids(output_tokens)
-        unconstrained_choice = max(range(len(logits)), key=lambda i: logits[i])
-        if unconstrained_choice in string_tokens:
-            masked = [-1e30] * len(logits)
-            for token_id in string_tokens:
-                masked[token_id] = logits[token_id]
-            token = max(string_tokens, key=lambda i: masked[i])
-            output_tokens.append(token)
-        else:
-            masked = [-1e30] * len(logits)
-            for token_id in terminators:
-                masked[token_id] = logits[token_id]
-            token = max(terminators, key=lambda i: masked[i])
-            output_tokens.append(token)
-            print("chose terminator:", token, repr(model.decode([token])))
-            break
-    generated_tokens = output_tokens[start:-1]
-    return model.decode(generated_tokens)
+        allowed = node.children.keys()
+        masked = [-1e30] * len(logits)
+        for token_id in allowed:
+            masked[token_id] = logits[token_id]
+        token = max(allowed, key=lambda i: masked[i])
+        output_tokens.append(token)
+        node = node.children[token]
+    assert node.name is not None
+    return node.name
 
 
 def emit_boolean(
         model: Small_LLM_Model, output_tokens: list[int],
-        bool_tokens: dict[str, list[int]]
-        ) -> bool:
+        bool_tokens: dict[str, list[int]]) -> bool:
     """mambo"""
     true_tokens = bool_tokens["true"]
     false_tokens = bool_tokens["false"]
@@ -198,17 +152,15 @@ def emit_boolean(
 def emit_parameter_type(
         param_type: str, model: Small_LLM_Model, output_tokens: list[int],
         digit_tokens: dict[str, int], bool_tokens: dict[str, list[int]],
-        string_tokens: set[int]
-        ) -> float | str | bool:
+        string_trie: Trie) -> float | str | bool:
     """hambo"""
-    print(repr(param_type))
     if param_type == "number":
         terminators = encode_terminators(model, [",", "}", "]"])
         return emit_number(model, output_tokens, digit_tokens, terminators)
     elif param_type == "string":
-        terminators = encode_terminators(model, ['"'])
-        terminators = encode_terminators(model, ['"'])
-        return emit_string(model, output_tokens, string_tokens, terminators)
+        return emit_string(
+            model, output_tokens, string_trie,
+            encode_terminators(model, ['"']))
     elif param_type == "boolean":
         return emit_boolean(model, output_tokens, bool_tokens)
     raise ValueError(f"Unknown parameter type: {param_type}")
@@ -219,7 +171,7 @@ def build_prompt_text(
     """mambo"""
     lines = [
         "Chooose a function for each prompt given.",
-        "Identify the correct arguments and their values from the prompt.",
+        "Extract the correct arguments and their values from the prompt.",
         "",
         "Available functions:",
     ]

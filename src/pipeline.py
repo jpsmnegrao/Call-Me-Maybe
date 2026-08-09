@@ -6,11 +6,11 @@ from .schemas import FunctionDefinition, Prompt, Output
 from .constrained_generator import (
     literals_encoder,
     encode_numbers,
-    parameters_encoder,
-    build_string_tokens,
     emit_function_name,
     emit_parameter_type,
-    build_prompt_text
+    build_prompt_text,
+    extract_string_candidates,
+    build_string_trie
 )
 from .trie import build_trie
 
@@ -22,8 +22,6 @@ def run_pipeline(
     model = Small_LLM_Model()
     encoded_lits = literals_encoder(model)
     digit_tokens = encode_numbers(model)
-    string_tokens = build_string_tokens(model)
-    encoded_param_keys = parameters_encoder(functions, model)
     bool_tokens = {
         "true": model.encode("true").tolist()[0],
         "false": model.encode("false").tolist()[0]
@@ -33,6 +31,8 @@ def run_pipeline(
     results: list[Output] = []
     for prompt in prompts:
         prompt_text = build_prompt_text(prompt, functions)
+        string_candidates = extract_string_candidates(prompt.prompt)
+        string_trie = build_string_trie(string_candidates, model)
         output_tokens: list[int] = model.encode(prompt_text).tolist()[0]
         output_tokens.extend(encoded_lits["lit_open"])
         output_tokens.extend(encoded_lits["lit_prompt"])
@@ -47,19 +47,30 @@ def run_pipeline(
         parameter_values: dict[str, float | str | bool] = {}
         param_items = list(selected_function.parameters.items())
         for i, (param_name, param_info) in enumerate(param_items):
-            output_tokens.extend(encoded_lits["lit_key_open"])
-            output_tokens.extend(encoded_param_keys[param_name])
-            output_tokens.extend(encoded_lits["lit_key_close"])
-            hint_text = (
-                f"(Extract the value with the correct type for '{param_name}'"
-                " from the request "
-                f"'{prompt.prompt}': the value is "
-            )
-            hint_tokens = model.encode(hint_text).tolist()[0]
-            output_tokens.extend(hint_tokens)
-            value = emit_parameter_type(
-                param_info.type, model, output_tokens,
-                digit_tokens, bool_tokens, string_tokens)
+            key_segment = f'"{param_name}": '
+            output_tokens.extend(model.encode(key_segment).tolist()[0])
+            if param_info.type == "string":
+                remaining_candidates = [
+                    c for c in string_candidates
+                    if c not in parameter_values.values()
+                ]
+                if not remaining_candidates:
+                    remaining_candidates = string_candidates
+                selection_hint = (
+                    f"(Choosing the value for '{param_name}' from candidates "
+                    f"{remaining_candidates}: "
+                )
+                hint_tokens = model.encode(selection_hint).tolist()[0]
+                output_tokens.extend(hint_tokens)
+                current_string_trie = build_string_trie(
+                    remaining_candidates, model)
+                value = emit_parameter_type(
+                    param_info.type, model, output_tokens, digit_tokens,
+                    bool_tokens, current_string_trie)
+            else:
+                value = emit_parameter_type(
+                    param_info.type, model, output_tokens, digit_tokens,
+                    bool_tokens, string_trie)
             parameter_values[param_name] = value
             if i < len(param_items) - 1:
                 output_tokens.extend(encoded_lits["lit_comma"])
@@ -69,5 +80,6 @@ def run_pipeline(
             prompt=prompt.prompt,
             name=selected_name,
             parameters=parameter_values,
-        ))
+            )
+        )
     return results
