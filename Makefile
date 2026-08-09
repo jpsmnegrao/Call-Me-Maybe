@@ -34,7 +34,8 @@ lint-strict:
 
 fclean: clean
 	@rm -rf .venv
-	@echo "Removed virtual environment - deep clean complete!"
+	@rm -rf data/output
+	@echo "Removed virtual environment and output files - deep clean complete!"
 
 test:
 	uv run pytest

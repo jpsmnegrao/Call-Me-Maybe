@@ -59,6 +59,10 @@ Example:
 ### Documentation
 
 - to fill in
+- 
+https://www.aidancooper.co.uk/constrained-decoding/
+
+https://www.youtube.com/watch?v=7xTGNNLPyMI
 
 ### AI Usage
 

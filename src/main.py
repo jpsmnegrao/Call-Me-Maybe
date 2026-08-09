@@ -7,6 +7,7 @@ from pydantic import ValidationError
 from .json_parser import prompt_parser, function_parser
 from .cli import CLIError, parse_cli
 from .pipeline import run_pipeline
+from .json_builder import json_builder
 
 
 def main() -> None:
@@ -16,7 +17,6 @@ def main() -> None:
     except (CLIError, ValidationError) as error:
         print(f"Command-line error: {error}")
         sys.exit(1)
-
     try:
         prompts = prompt_parser(cli.input)
     except json.JSONDecodeError:
@@ -25,7 +25,6 @@ def main() -> None:
     except (ValidationError, ValueError) as error:
         print(f"Error reading prompts file: {error}")
         sys.exit(1)
-
     try:
         functions = function_parser(cli.functions)
     except json.JSONDecodeError:
@@ -35,5 +34,10 @@ def main() -> None:
         print(f"Error reading functions definition file: {error}")
         sys.exit(1)
     results = run_pipeline(prompts, functions)
+    try:
+        json_builder(results, cli.output)
+    except OSError as error:
+        print(f"Error writing output file: {error}")
+        sys.exit(1)
     for result in results:
         print(result)
