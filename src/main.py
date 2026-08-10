@@ -1,5 +1,8 @@
-"""mambo jambo"""
+"""Main application entry point.
 
+This module coordinates command-line argument parsing, input file parsing,
+pipeline execution, result serialization, and application output.
+"""
 
 import json
 import sys
@@ -11,7 +14,15 @@ from .json_builder import json_builder
 
 
 def main() -> None:
-    """mambo"""
+    """Run the main application workflow.
+
+    Parses command-line arguments, loads and validates prompt and function
+    definition files, runs the function-calling pipeline, writes the results
+    to the configured output file, and prints the generated results.
+
+    Expected errors are reported to the user and terminate the application
+    with exit code 1.
+    """
     try:
         cli = parse_cli()
     except (CLIError, ValidationError) as error:
@@ -22,7 +33,7 @@ def main() -> None:
     except json.JSONDecodeError:
         print("Error reading prompts file: invalid JSON format!")
         sys.exit(1)
-    except (ValidationError, ValueError) as error:
+    except (ValidationError, ValueError, TypeError, OSError) as error:
         print(f"Error reading prompts file: {error}")
         sys.exit(1)
     try:
@@ -30,7 +41,7 @@ def main() -> None:
     except json.JSONDecodeError:
         print("Error reading functions definition file: invalid JSON format!")
         sys.exit(1)
-    except (ValidationError, ValueError) as error:
+    except (ValidationError, ValueError, TypeError, OSError) as error:
         print(f"Error reading functions definition file: {error}")
         sys.exit(1)
     results = run_pipeline(prompts, functions)

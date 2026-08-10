@@ -25,6 +25,18 @@ DATA = Path("tests/data")
 def run_main_with_files(
         monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
         input_file: Path, functions_file: Path, label: str) -> None:
+    """Run main() with the supplied files and print diagnostics.
+
+    Args:
+        monkeypatch: Pytest fixture used to temporarily replace sys.argv.
+        capsys: Pytest fixture used to capture application output.
+        input_file: Path to the prompt input file.
+        functions_file: Path to the function definition file.
+        label: Descriptive name used in the diagnostic output.
+
+    Raises:
+        SystemExit: Re-raises the expected exit from main().
+    """
     monkeypatch.setattr(
         sys,
         "argv",
@@ -42,6 +54,8 @@ def run_main_with_files(
         main()
     except SystemExit:
         output = capsys.readouterr().out.strip()
+        assert output
+        assert "Traceback" not in output
         print("\n" + "=" * 70)
         print(f"TEST: MAIN {label}")
         print(f"INPUT: {input_file.name}")
@@ -58,7 +72,7 @@ def run_main_with_files(
 def test_main_clean_exit_on_prompt_file_not_found(
         monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
         ) -> None:
-    """mambo"""
+    """Prompt file not found should be handled cleanly."""
     with pytest.raises(SystemExit):
         run_main_with_files(
             monkeypatch,
@@ -72,7 +86,7 @@ def test_main_clean_exit_on_prompt_file_not_found(
 def test_main_clean_exit_on_prompt_invalid_syntax(
         monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
         ) -> None:
-    """mambo"""
+    """Invalid prompt JSON should be handled cleanly."""
     with pytest.raises(SystemExit):
         run_main_with_files(
             monkeypatch,
@@ -86,7 +100,7 @@ def test_main_clean_exit_on_prompt_invalid_syntax(
 def test_main_clean_exit_on_prompt_validation_error(
         monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
         ) -> None:
-    """mambo"""
+    """Invalid prompt data should be handled cleanly."""
     with pytest.raises(SystemExit):
         run_main_with_files(
             monkeypatch,
@@ -100,7 +114,7 @@ def test_main_clean_exit_on_prompt_validation_error(
 def test_main_clean_exit_on_prompt_empty_file(
         monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
         ) -> None:
-    """mambo"""
+    """An empty prompt file should be handled cleanly."""
     with pytest.raises(SystemExit):
         run_main_with_files(
             monkeypatch,
@@ -114,7 +128,7 @@ def test_main_clean_exit_on_prompt_empty_file(
 def test_main_clean_exit_on_prompt_not_array(
         monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
         ) -> None:
-    """mambo"""
+    """A prompt file with an invalid structure should be handled cleanly."""
     with pytest.raises(SystemExit):
         run_main_with_files(
             monkeypatch,
@@ -128,7 +142,7 @@ def test_main_clean_exit_on_prompt_not_array(
 def test_main_clean_exit_on_function_file_not_found(
         monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
         ) -> None:
-    """mambo"""
+    """Function definition file not found should be handled cleanly."""
     with pytest.raises(SystemExit):
         run_main_with_files(
             monkeypatch,
@@ -142,7 +156,7 @@ def test_main_clean_exit_on_function_file_not_found(
 def test_main_clean_exit_on_function_invalid_syntax(
         monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
         ) -> None:
-    """mambo"""
+    """Invalid function definition JSON should be handled cleanly."""
     with pytest.raises(SystemExit):
         run_main_with_files(
             monkeypatch,
@@ -156,7 +170,7 @@ def test_main_clean_exit_on_function_invalid_syntax(
 def test_main_clean_exit_on_function_validation_error(
         monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
         ) -> None:
-    """mambo"""
+    """Invalid function definition data should be handled cleanly."""
     with pytest.raises(SystemExit):
         run_main_with_files(
             monkeypatch,
@@ -170,7 +184,7 @@ def test_main_clean_exit_on_function_validation_error(
 def test_main_clean_exit_on_function_empty_file(
         monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
         ) -> None:
-    """mambo"""
+    """An empty function definition file should be handled cleanly."""
     with pytest.raises(SystemExit):
         run_main_with_files(
             monkeypatch,
@@ -184,7 +198,7 @@ def test_main_clean_exit_on_function_empty_file(
 def test_main_clean_exit_on_function_not_array(
         monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
         ) -> None:
-    """mambo"""
+    """A func defs file with invalid structure should be handled cleanly."""
     with pytest.raises(SystemExit):
         run_main_with_files(
             monkeypatch,
@@ -192,4 +206,38 @@ def test_main_clean_exit_on_function_not_array(
             DATA / "function_calling_tests.json",
             DATA / "functions_definition_not_array.json",
             "function_not_array",
+        )
+
+
+def test_main_clean_exit_on_prompt_invalid_entry(
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+        ) -> None:
+    """A non-object prompt entry should be handled cleanly."""
+    # NEED TO CONFIRM THE CONTENT ON THE TEST FILE
+
+    with pytest.raises(SystemExit):
+        run_main_with_files(
+            monkeypatch,
+            capsys,
+            DATA / "function_calling_tests_invalid_entry.json",
+            DATA / "functions_definition.json",
+            "prompt_invalid_entry",
+        )
+
+
+def test_main_clean_exit_on_function_invalid_entry(
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+        ) -> None:
+    """A non-object function entry should be handled cleanly."""
+    # NEED TO CONFIRM THE CONTENT ON THE TEST FILE
+
+    with pytest.raises(SystemExit):
+        run_main_with_files(
+            monkeypatch,
+            capsys,
+            DATA / "function_calling_tests.json",
+            DATA / "functions_definition_invalid_entry.json",
+            "function_invalid_entry",
         )

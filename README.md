@@ -76,6 +76,10 @@ https://www.youtube.com/watch?v=7xTGNNLPyMI
 ### Design decisions
 • Design decisions: Explain key choices in your implementation
 
+Pydantic and Class Design
+
+Pydantic is used for classes that represent structured data and require validation. Behavioural classes retain appropriate standard Python base classes, such as argparse.ArgumentParser for the CLI parser and Exception for CLI errors, since Pydantic would not provide useful validation for their roles.
+
 ### Performance analysis
 • Performance analysis: Discuss accuracy, speed, and reliability of your solution
 

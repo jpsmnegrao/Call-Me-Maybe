@@ -6,6 +6,14 @@ invalid command-line inputs are handled cleanly.
 CLI validation is tested here. JSON parsing behaviour is tested separately in
 json_parser tests. Application exit behaviour is tested separately in main
 tests.
+
+The pytest ``monkeypatch`` fixture is used to temporarily replace ``sys.argv``
+during each test, allowing the CLI parser to be tested with different
+command-line arguments without invoking the program from a shell.
+
+The test helper also prints diagnostic information for each test, including
+the exception type and message when an error is raised. This makes it easier
+to inspect exceptions raised during CLI validation.
 """
 
 
@@ -23,6 +31,20 @@ DATA = Path("tests/data")
 
 def run_cli_test(
         monkeypatch: pytest.MonkeyPatch, args: list[str], label: str) -> CLI:
+    """Run the CLI with the supplied arguments and print diagnostics.
+
+    Args:
+        monkeypatch: Pytest fixture used to temporarily replace ``sys.argv``.
+        args: Command-line arguments to pass to the CLI parser.
+        label: Descriptive name used in the diagnostic output.
+
+    Returns:
+        The validated CLI object returned by ``parse_cli``.
+
+    Raises:
+        Exception: Re-raises any exception produced by ``parse_cli`` after
+            printing its type and message for diagnostic purposes.
+    """
     monkeypatch.setattr(sys, "argv", ["call-me-maybe"] + args)
     try:
         cli = parse_cli()
@@ -62,6 +84,20 @@ def test_parse_cli_valid_arguments(monkeypatch: pytest.MonkeyPatch) -> None:
     assert cli.functions == DATA / "functions_definition.json"
     assert cli.input == DATA / "function_calling_tests.json"
     assert cli.output == DATA / "output.json"
+
+
+def test_parse_cli_no_arguments_uses_all_defaults(
+    monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Omitting all arguments should use all default paths."""
+    cli = run_cli_test(
+        monkeypatch,
+        [],
+        "no_arguments_uses_all_defaults",
+    )
+    assert str(cli.functions) == "data/input/functions_definition.json"
+    assert str(cli.input) == "data/input/function_calling_tests.json"
+    assert str(cli.output) == "data/output/function_calling_results.json"
 
 
 def test_parse_cli_missing_functions_definition_uses_default(
@@ -183,4 +219,46 @@ def test_parse_cli_unrecognized_flag(monkeypatch: pytest.MonkeyPatch) -> None:
                 "foo",
             ],
             "unrecognized_flag",
+        )
+
+
+def test_parse_cli_missing_functions_definition_value(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """--functions_definition without a value should raise CLIError."""
+    with pytest.raises(CLIError):
+        run_cli_test(
+            monkeypatch,
+            [
+                "--functions_definition",
+            ],
+            "missing_flag_value",
+        )
+
+
+def test_parse_cli_missing_input_value(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """--input without a value should raise CLIError, not exit the process."""
+    with pytest.raises(CLIError):
+        run_cli_test(
+            monkeypatch,
+            [
+                "--input",
+            ],
+            "missing_input_value",
+        )
+
+
+def test_parse_cli_missing_output_value(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """--output without a value should raise CLIError, not exit the process."""
+    with pytest.raises(CLIError):
+        run_cli_test(
+            monkeypatch,
+            [
+                "--output",
+            ],
+            "missing_output_value",
         )
