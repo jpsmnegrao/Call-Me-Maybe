@@ -170,3 +170,37 @@ def emit_parameter_type(
     elif param_type == "boolean":
         return emit_boolean(model, output_tokens, bool_tokens)
     raise ValueError(f"Unknown parameter type: {param_type}")
+
+
+# Extraction-based generation can only produce values that literally appear
+# in the prompt. This fails for regex parameters implied by keywords (e.g.
+# "vowels") when the regex itself (e.g. "[aeiouAEIOU]") is absent. This map
+# is a narrow fallback for that specific case, not a general LLM substitute.
+REGEX_KEYWORD_MAP: dict[str, str] = {
+    "vowels": "[aeiouAEIOU]",
+    "consonants": r"[^aeiouAEIOU\s]",
+    "numbers": r"\d+",
+    "digits": r"\d",
+    "letters": "[a-zA-Z]",
+    "uppercase": "[A-Z]",
+    "lowercase": "[a-z]",
+    "whitespace": r"\s+",
+    "spaces": r"\s+",
+    "punctuation": r"[.,!?;:]",
+}
+
+
+def match_regex_keyword(prompt_text: str) -> str | None:
+    """Check if the prompt mentions a known character-class keyword, and
+    return its regex equivalent if so.
+
+    This is a deliberate, narrow fallback for cases where a regex pattern is
+    implied by a keyword (e.g. "vowels") rather than literally present in the
+    prompt text, which extraction-based generation cannot otherwise produce.
+    See README for discussion.
+    """
+    prompt_lower = prompt_text.lower()
+    for keyword, pattern in REGEX_KEYWORD_MAP.items():
+        if keyword in prompt_lower:
+            return pattern
+    return None

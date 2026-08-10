@@ -10,7 +10,8 @@ from llm_sdk import Small_LLM_Model  # type: ignore[attr-defined]
 from .schemas import FunctionDefinition, Prompt, Output
 from .token_setup import (literals_encoder, encode_numbers, build_prompt_text,
                           extract_string_candidates, build_string_trie)
-from .constrained_generator import emit_function_name, emit_parameter_type
+from .constrained_generator import (emit_function_name, emit_parameter_type,
+                                    match_regex_keyword)
 from .trie import Trie, build_trie
 
 
@@ -77,7 +78,15 @@ def process_prompt(
     for i, (param_name, param_info) in enumerate(param_items):
         key_segment = f'"{param_name}": '
         output_tokens.extend(model.encode(key_segment).tolist()[0])
-        if param_info.type == "string":
+        is_regex_param = (
+            "regex" in param_name.lower() or "pattern" in param_name.lower())
+        keyword_value = (
+            match_regex_keyword(prompt.prompt) if is_regex_param else None)
+        if keyword_value is not None:
+            value_tokens = model.encode(f'"{keyword_value}"').tolist()[0]
+            output_tokens.extend(value_tokens)
+            value: float | str | bool = keyword_value
+        elif param_info.type == "string":
             remaining_candidates = [
                 c for c in string_candidates
                 if c not in parameter_values.values()
