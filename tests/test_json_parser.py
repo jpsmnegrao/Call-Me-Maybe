@@ -1,4 +1,13 @@
-"""mambo jambo"""
+"""Tests for JSON parsing and validation utilities.
+
+These tests verify that the prompt and function definition parsers correctly
+load valid JSON input, reject invalid files and structures, and enforce the
+corresponding Pydantic schemas.
+
+The tests use real JSON fixture files to exercise parser behaviour, including
+missing files, invalid JSON syntax, invalid structures, validation errors, and
+valid input.
+"""
 
 import pytest
 import json
@@ -19,6 +28,20 @@ def run_parser_test(
         parser: Callable[[Path], list[Prompt] | list[FunctionDefinition]],
         file_path: Path, label: str
         ) -> list[Prompt] | list[FunctionDefinition]:
+    """Run a parser test and print diagnostic information.
+
+    Args:
+        parser: Parser function to execute.
+        file_path: Path to the JSON fixture being tested.
+        label: Descriptive name for the test case.
+
+    Returns:
+        The parsed and validated objects returned by the parser.
+
+    Raises:
+        Exception: Re-raises any exception produced by the parser after
+            printing its type and message.
+    """
     try:
         result = parser(file_path)
         print("\n" + "=" * 70)
@@ -42,7 +65,7 @@ def run_parser_test(
 
 
 def test_prompt_parser_valid() -> None:
-    """amambo jambo"""
+    """Verify that a valid prompt file is parsed correctly."""
     with open("tests/data/function_calling_tests.json", 'r') as file:
         raw_prompts: list[dict[str, Any]] = json.load(file)
     prompts = cast(
@@ -63,7 +86,7 @@ def test_prompt_parser_valid() -> None:
 
 
 def test_prompt_parser_file_not_found() -> None:
-    """jambo jambo"""
+    """Verify that a missing prompt file raises FileNotFoundError."""
     with pytest.raises(FileNotFoundError):
         run_parser_test(
             prompt_parser,
@@ -73,7 +96,7 @@ def test_prompt_parser_file_not_found() -> None:
 
 
 def test_prompt_parser_invalid_syntax() -> None:
-    """jambo jambo"""
+    """Verify that invalid prompt JSON raises JSONDecodeError."""
     with pytest.raises(json.JSONDecodeError):
         run_parser_test(
             prompt_parser,
@@ -83,7 +106,7 @@ def test_prompt_parser_invalid_syntax() -> None:
 
 
 def test_prompt_parser_empty_array() -> None:
-    """jambo jambo"""
+    """Verify that an empty prompt array raises ValueError."""
     with pytest.raises(ValueError):
         run_parser_test(
             prompt_parser,
@@ -93,7 +116,7 @@ def test_prompt_parser_empty_array() -> None:
 
 
 def test_prompt_parser_not_array() -> None:
-    """jambo jambo"""
+    """Verify that non-array prompt JSON raises ValueError."""
     with pytest.raises(ValueError):
         run_parser_test(
             prompt_parser,
@@ -102,8 +125,20 @@ def test_prompt_parser_not_array() -> None:
         )
 
 
+def test_prompt_parser_non_object_item() -> None:
+    """Verify that a prompt array containing a non-object item is rejected."""
+    # NEED TO CONFIRM THE CONTENT ON THE TEST FILE
+
+    with pytest.raises((TypeError, ValidationError)):
+        run_parser_test(
+            prompt_parser,
+            DATA / "function_calling_tests_non_object_item.json",
+            "non_object_item",
+        )
+
+
 def test_prompt_parser_empty_key_value() -> None:
-    """jambo jambo"""
+    """Verify that an empty prompt value fails Pydantic validation."""
     with pytest.raises(ValidationError):
         run_parser_test(
             prompt_parser,
@@ -113,7 +148,7 @@ def test_prompt_parser_empty_key_value() -> None:
 
 
 def test_prompt_parser_wrong_key() -> None:
-    """jambo jambo"""
+    """Verify that a prompt with an incorrect field fails validation."""
     with pytest.raises(ValidationError):
         run_parser_test(
             prompt_parser,
@@ -123,7 +158,7 @@ def test_prompt_parser_wrong_key() -> None:
 
 
 def test_prompt_parser_invalid_data_type() -> None:
-    """jambo jambo"""
+    """Verify that an invalid prompt field type fails validation."""
     with pytest.raises(ValidationError):
         run_parser_test(
             prompt_parser,
@@ -133,7 +168,7 @@ def test_prompt_parser_invalid_data_type() -> None:
 
 
 def test_prompt_parser_extra_key() -> None:
-    """jambo jambo"""
+    """Verify that an unexpected prompt field fails validation."""
     with pytest.raises(ValidationError):
         run_parser_test(
             prompt_parser,
@@ -146,7 +181,7 @@ def test_prompt_parser_extra_key() -> None:
 
 
 def test_function_parser_valid() -> None:
-    """amambo jambo"""
+    """Verify that valid function definitions are parsed correctly."""
     with open("tests/data/functions_definition.json", 'r') as file:
         raw_functions: list[dict[str, Any]] = json.load(file)
     functions = cast(
@@ -167,7 +202,7 @@ def test_function_parser_valid() -> None:
 
 
 def test_function_parser_file_not_found() -> None:
-    """jambo jambo"""
+    """Verify that a missing func definition file raises FileNotFoundError."""
     with pytest.raises(FileNotFoundError):
         run_parser_test(
             function_parser,
@@ -177,7 +212,7 @@ def test_function_parser_file_not_found() -> None:
 
 
 def test_function_parser_invalid_syntax() -> None:
-    """jambo jambo"""
+    """Verify that invalid function definition JSON raises JSONDecodeError."""
     with pytest.raises(json.JSONDecodeError):
         run_parser_test(
             function_parser,
@@ -187,7 +222,7 @@ def test_function_parser_invalid_syntax() -> None:
 
 
 def test_function_parser_empty_array() -> None:
-    """jambo jambo"""
+    """Verify that an empty function definition array raises ValueError."""
     with pytest.raises(ValueError):
         run_parser_test(
             function_parser,
@@ -197,7 +232,7 @@ def test_function_parser_empty_array() -> None:
 
 
 def test_function_parser_not_array() -> None:
-    """jambo jambo"""
+    """Verify that non-array function definition JSON raises ValueError."""
     with pytest.raises(ValueError):
         run_parser_test(
             function_parser,
@@ -206,8 +241,20 @@ def test_function_parser_not_array() -> None:
         )
 
 
+def test_function_parser_non_object_item() -> None:
+    """Verify that a func array containing a non-object item is rejected."""
+    # NEED TO CONFIRM THE CONTENT ON THE TEST FILE
+
+    with pytest.raises((TypeError, ValidationError)):
+        run_parser_test(
+            function_parser,
+            DATA / "functions_definition_non_object_item.json",
+            "non_object_item",
+        )
+
+
 def test_function_parser_wrong_key() -> None:
-    """jambo jambo"""
+    """Verify that an incorrect function definition field fails validation."""
     with pytest.raises(ValidationError):
         run_parser_test(
             function_parser,
@@ -217,7 +264,7 @@ def test_function_parser_wrong_key() -> None:
 
 
 def test_function_parser_invalid_data_type() -> None:
-    """jambo jambo"""
+    """Verify that an invalid func definition field type fails validation."""
     with pytest.raises(ValidationError):
         run_parser_test(
             function_parser,
@@ -227,7 +274,7 @@ def test_function_parser_invalid_data_type() -> None:
 
 
 def test_function_parser_extra_key() -> None:
-    """jambo jambo"""
+    """Verify that an unexpected function definition field fails validation."""
     with pytest.raises(ValidationError):
         run_parser_test(
             function_parser,
@@ -237,7 +284,7 @@ def test_function_parser_extra_key() -> None:
 
 
 def test_function_parser_extra_nested_key() -> None:
-    """jambo jambo"""
+    """Verify that an unexpected nested parameter field fails validation."""
     with pytest.raises(ValidationError):
         run_parser_test(
             function_parser,
@@ -247,7 +294,7 @@ def test_function_parser_extra_nested_key() -> None:
 
 
 def test_function_parser_empty_parameters() -> None:
-    """jambo jambo"""
+    """Verify that an empty parameter mapping is accepted."""
     functions = cast(
         list[FunctionDefinition],
         run_parser_test(
@@ -261,6 +308,8 @@ def test_function_parser_empty_parameters() -> None:
     assert any(function.parameters == {} for function in functions)
 
 
+# Base valid definition used by the tests below to verify individual
+# FunctionDefinition validation rules without going through the JSON parser.
 VALID_FUNCTION_DEFINITION: dict[str, Any] = {
     "name": "fn_add_numbers",
     "description": "Add two numbers together and return their sum.",
@@ -276,7 +325,7 @@ VALID_FUNCTION_DEFINITION: dict[str, Any] = {
     "missing_field", list(VALID_FUNCTION_DEFINITION.keys()))
 def test_function_definition_missing_required_field(
         missing_field: str) -> None:
-    """jambo jambo"""
+    """Verify that each required function field is validated."""
     incomplete = VALID_FUNCTION_DEFINITION.copy()
     del incomplete[missing_field]
     with pytest.raises(ValidationError):
@@ -284,7 +333,7 @@ def test_function_definition_missing_required_field(
 
 
 def test_function_definition_empty_name() -> None:
-    """jambo jambo"""
+    """Verify that an empty function name fails validation."""
     invalid = VALID_FUNCTION_DEFINITION.copy()
     invalid["name"] = ""
     with pytest.raises(ValidationError):
@@ -292,7 +341,7 @@ def test_function_definition_empty_name() -> None:
 
 
 def test_function_definition_empty_parameter_key() -> None:
-    """jambo jambo"""
+    """Verify that an empty parameter name fails validation."""
     invalid = VALID_FUNCTION_DEFINITION.copy()
     invalid["parameters"] = {
         "": {"type": "number"},

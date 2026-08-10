@@ -1,4 +1,9 @@
-"""mambo jambo"""
+"""Pipeline for constrained function-calling generation.
+
+This module prepares the token-generation context, processes individual
+prompts into structured function calls, and runs the generation pipeline
+across a collection of prompts.
+"""
 
 
 from llm_sdk import Small_LLM_Model  # type: ignore[attr-defined]
@@ -13,7 +18,16 @@ def setup_generation_context(
         functions: list[FunctionDefinition], model: Small_LLM_Model
         ) -> tuple[dict[str, list[int]], dict[str, int],
                    dict[str, list[int]], Trie]:
-    """mambo"""
+    """Prepare encoded tokens and the function-name trie for generation.
+
+    Args:
+        functions: Function definitions available for selection.
+        model: Language model used to encode literals and function names.
+
+    Returns:
+        A tuple containing encoded JSON literals, numeric token IDs, boolean
+        token sequences, and the function-name trie.
+    """
     encoded_lits = literals_encoder(model)
     digit_tokens = encode_numbers(model)
     bool_tokens = {
@@ -30,7 +44,21 @@ def process_prompt(
         trie: Trie, encoded_lits: dict[str, list[int]],
         digit_tokens: dict[str, int], bool_tokens: dict[str, list[int]],
         model: Small_LLM_Model) -> Output:
-    """mambo"""
+    """Generate a function call for a single prompt.
+
+    Args:
+        prompt: Prompt containing the user's request.
+        functions: Function definitions available for selection.
+        trie: Trie containing tokenized function names.
+        encoded_lits: Tokenized JSON syntax literals used during generation.
+        digit_tokens: Token IDs for numeric characters.
+        bool_tokens: Token sequences for boolean values.
+        model: Language model used for constrained generation.
+
+    Returns:
+        The generated function call containing the selected function name and
+        extracted parameter values.
+    """
     prompt_text = build_prompt_text(prompt, functions)
     string_candidates = extract_string_candidates(prompt.prompt)
     output_tokens: list[int] = model.encode(prompt_text).tolist()[0]
@@ -86,7 +114,15 @@ def process_prompt(
 def run_pipeline(
         prompts: list[Prompt], functions: list[FunctionDefinition]
         ) -> list[Output]:
-    """mambo"""
+    """Run constrained function-call generation for all prompts.
+
+    Args:
+        prompts: Prompts for which function calls should be generated.
+        functions: Function definitions available for selection.
+
+    Returns:
+        A list of generated function calls, one for each prompt.
+    """
     model = Small_LLM_Model()
     encoded_lits, digit_tokens, bool_tokens, trie = (
         setup_generation_context(functions, model)

@@ -1,4 +1,9 @@
-"""mambo jambo"""
+"""Tests for the end-to-end function-calling pipeline.
+
+These tests verify that the pipeline selects the appropriate function and
+extracts the expected parameter values for representative number and string
+function-calling prompts.
+"""
 
 
 import pytest
@@ -9,13 +14,17 @@ from src.schemas import Prompt, FunctionDefinition, ParameterInfo
 
 @pytest.fixture(scope="module")
 def model() -> Small_LLM_Model:
-    """Load the model once for this test module (expensive)."""
+    """Load the language model once for all tests in this module.
+
+    Returns:
+        A loaded Small_LLM_Model instance shared by the module's tests.
+    """
     return Small_LLM_Model()
 
 
 def test_pipeline_produces_correct_output_for_simple_addition(
         model: Small_LLM_Model) -> None:
-    """jambo"""
+    """Verify that the pipeline extracts numbers for an addition function."""
     functions = [
         FunctionDefinition(
             name="fn_add_numbers",
@@ -38,7 +47,7 @@ def test_pipeline_produces_correct_output_for_simple_addition(
 
 def test_pipeline_produces_correct_output_for_greet(
         model: Small_LLM_Model) -> None:
-    """jambo"""
+    """Verify that the pipeline extracts a person's name for a greeting."""
     functions = [
         FunctionDefinition(
             name="fn_greet",

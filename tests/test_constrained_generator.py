@@ -1,8 +1,13 @@
-"""mambo hambo"""
+"""Tests for constrained value and function-name generation.
+
+These tests verify that constrained generation produces values of the expected
+types and, where deterministic prompts are used, extracts the expected
+function names, numbers, and strings.
+"""
+
 
 import pytest
 from llm_sdk import Small_LLM_Model  # type: ignore[attr-defined]
-from src.trie import build_trie, TrieNode
 from src.token_setup import (
     literals_encoder,
     encode_numbers,
@@ -15,6 +20,7 @@ from src.constrained_generator import (
     emit_boolean,
     emit_function_name,
 )
+from src.trie import build_trie
 
 
 @pytest.fixture(scope="module")
@@ -23,16 +29,11 @@ def model() -> Small_LLM_Model:
     return Small_LLM_Model()
 
 
-def next_tokens(self, node: TrieNode) -> set[int]:
-    """Return the token IDs that can legally follow this node."""
-    return set(node.children.keys())
-
-
 # ENCODER TESTS (deterministic, no model judgment involved)
 
 
 def test_literals_encoder_has_expected_keys(model: Small_LLM_Model) -> None:
-    """jambo"""
+    """Verify that all expected literal keys are encoded."""
     encoded = literals_encoder(model)
     expected_keys = {
         "lit_open", "lit_prompt", "lit_name", "lit_name_close",
@@ -45,7 +46,7 @@ def test_literals_encoder_has_expected_keys(model: Small_LLM_Model) -> None:
 
 def test_encode_numbers_covers_all_digits_and_symbols(
         model: Small_LLM_Model) -> None:
-    """jambo"""
+    """Verify that all supported numeric characters are encoded."""
     digits = encode_numbers(model)
     expected = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "-"}
     assert set(digits.keys()) == expected
@@ -55,7 +56,7 @@ def test_encode_numbers_covers_all_digits_and_symbols(
 
 def test_encode_terminators_matches_known_token_ids(
         model: Small_LLM_Model) -> None:
-    """jambo"""
+    """Verify that terminator token IDs match the model's encodings."""
     terminators = encode_terminators(model, [",", "}", "]"])
     comma = model.encode(",").tolist()[0][0]
     close_brace = model.encode("}").tolist()[0][0]
@@ -67,7 +68,7 @@ def test_encode_terminators_matches_known_token_ids(
 
 
 def test_emit_boolean_returns_bool(model: Small_LLM_Model) -> None:
-    """jambo"""
+    """Verify that boolean emission returns a boolean value."""
     bool_tokens = {
         "true": model.encode("true").tolist()[0],
         "false": model.encode("false").tolist()[0],
@@ -79,7 +80,7 @@ def test_emit_boolean_returns_bool(model: Small_LLM_Model) -> None:
 
 def test_emit_number_returns_float_and_terminates(
         model: Small_LLM_Model) -> None:
-    """jambo"""
+    """Verify that number emission returns a float and terminates."""
     digit_tokens = encode_numbers(model)
     terminators = encode_terminators(model, [",", "}", "."])
     output_tokens = model.encode("The sum of 2 and 3 is ").tolist()[0]
@@ -90,7 +91,7 @@ def test_emit_number_returns_float_and_terminates(
 
 def test_emit_string_returns_str_and_terminates(
         model: Small_LLM_Model) -> None:
-    """jambo"""
+    """Verify that string emission returns a non-empty string."""
     candidates = ["shrek"]
     string_trie = build_string_trie(candidates, model)
     terminators = encode_terminators(model, ['"'])
@@ -103,7 +104,7 @@ def test_emit_string_returns_str_and_terminates(
 
 def test_emit_function_name_selects_a_valid_name(
         model: Small_LLM_Model) -> None:
-    """jambo"""
+    """Verify that function-name emission selects a valid function name."""
     function_names = ["fn_add_numbers", "fn_greet"]
     trie = build_trie(function_names, model)
     output_tokens = model.encode(
@@ -114,7 +115,7 @@ def test_emit_function_name_selects_a_valid_name(
 
 def test_emit_number_extracts_the_correct_value(
         model: Small_LLM_Model) -> None:
-    """jambo"""
+    """Verify that number emission extracts the expected value."""
     digit_tokens = encode_numbers(model)
     terminators = encode_terminators(model, [",", "}", "."])
     output_tokens = model.encode(
@@ -126,7 +127,7 @@ def test_emit_number_extracts_the_correct_value(
 
 def test_emit_string_extracts_the_correct_name(
         model: Small_LLM_Model) -> None:
-    """jambo"""
+    """Verify that string emission extracts the expected candidate."""
     candidates = ["shrek"]
     string_trie = build_string_trie(candidates, model)
     terminators = encode_terminators(model, ['"'])

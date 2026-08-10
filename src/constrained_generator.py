@@ -1,4 +1,9 @@
-"""mambo jambo"""
+"""Utilities for constrained generation of function-call components.
+
+This module uses the LLM's logits together with tries and token constraints
+to generate function names and parameter values that conform to the expected
+function-call structure.
+"""
 
 
 from llm_sdk import Small_LLM_Model  # type: ignore
@@ -8,7 +13,23 @@ from .token_setup import encode_terminators
 
 def emit_function_name(
         trie: Trie, model: Small_LLM_Model, output_tokens: list[int]) -> str:
-    """hambo"""
+    """Generate a function name constrained by a function-name trie.
+
+    Args:
+        trie: Trie containing the available function names as token sequences.
+        model: LLM model used to score the possible next tokens.
+        output_tokens: Token IDs generated so far, used as the model input
+            during generation.
+
+    Returns:
+        The name of the selected function.
+    """
+
+    # TODO: Handle function names where one valid name is a prefix of another.
+    # Currently, generation stops as soon as a finished trie node is reached,
+    # so a shorter name such as "fn_get" can be selected instead of
+    # "fn_get_current_time".
+
     node = trie.root
     while not node.finished:
         logits = model.get_logits_from_input_ids(output_tokens)
@@ -27,7 +48,18 @@ def emit_number(
         model: Small_LLM_Model, output_tokens: list[int],
         digit_tokens: dict[str, int], terminators: set[int],
         max_tokens: int = 20) -> float:
-    """mambo"""
+    """Generate a number while restricting tokens to valid numeric tokens.
+
+    Args:
+        model: LLM model used to score the possible next tokens.
+        output_tokens: Token IDs generated so far.
+        digit_tokens: Mapping of numeric characters to their token IDs.
+        terminators: Token IDs that may terminate the generated number.
+        max_tokens: Maximum number of numeric tokens to generate.
+
+    Returns:
+        The generated value converted to a float.
+    """
     start = len(output_tokens)
     digits = set(digit_tokens.values())
     for _ in range(max_tokens):
@@ -54,7 +86,18 @@ def emit_number(
 def emit_string(
         model: Small_LLM_Model, output_tokens: list[int], trie: Trie,
         terminators: set[int], max_tokens: int = 20) -> str:
-    """Generate one complete string candidate from a trie."""
+    """Generate a string constrained to candidates stored in a trie.
+
+    Args:
+        model: LLM model used to score the possible next tokens.
+        output_tokens: Token IDs generated so far.
+        trie: Trie containing the allowed string candidates.
+        terminators: Token IDs that may terminate the generated string.
+        max_tokens: Maximum number of tokens to generate.
+
+    Returns:
+        The selected string candidate.
+    """
     node = trie.root
     while not node.finished:
         logits = model.get_logits_from_input_ids(output_tokens)
@@ -72,7 +115,16 @@ def emit_string(
 def emit_boolean(
         model: Small_LLM_Model, output_tokens: list[int],
         bool_tokens: dict[str, list[int]]) -> bool:
-    """mambo"""
+    """Generate a boolean value by comparing true and false token scores.
+
+    Args:
+        model: LLM model used to score the boolean tokens.
+        output_tokens: Token IDs generated so far.
+        bool_tokens: Mapping of boolean values to their token IDs.
+
+    Returns:
+        True if the true token receives the higher score, otherwise False.
+    """
     true_tokens = bool_tokens["true"]
     false_tokens = bool_tokens["false"]
     logits = model.get_logits_from_input_ids(output_tokens)
@@ -88,7 +140,24 @@ def emit_parameter_type(
         param_type: str, model: Small_LLM_Model, output_tokens: list[int],
         digit_tokens: dict[str, int], bool_tokens: dict[str, list[int]],
         string_trie: Trie | None) -> float | str | bool:
-    """hambo"""
+    """Generate a parameter value according to its declared type.
+
+    Args:
+        param_type: Declared parameter type to generate.
+        model: LLM model used for constrained generation.
+        output_tokens: Token IDs generated so far.
+        digit_tokens: Mapping of numeric characters to their token IDs.
+        bool_tokens: Mapping of boolean values to their token IDs.
+        string_trie: Trie containing allowed string candidates, when the
+            parameter type is string.
+
+    Returns:
+        The generated parameter value.
+
+    Raises:
+        ValueError: If a string parameter has no candidate trie or if the
+            parameter type is unsupported.
+    """
     if param_type == "number":
         terminators = encode_terminators(model, [",", "}"])
         return emit_number(model, output_tokens, digit_tokens, terminators)
