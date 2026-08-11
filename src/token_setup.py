@@ -89,7 +89,8 @@ def extract_string_candidates(prompt: str) -> list[str]:
         A list of unique candidate string values.
     """
     # Capture the content between any pair of quote characters
-    quoted = re.findall(r"""["']([^"']*)["']""", prompt)
+    quoted = (
+        re.findall(r'"([^"]*)"', prompt) + re.findall(r"'([^']*)'", prompt))
     # Blank out quoted spans so they aren't re-matched below
     text_without_quotes = re.sub(r"""["'][^"']*["']""", " ", prompt)
     # Capture capitalized words not at the start of the sentence
@@ -150,3 +151,23 @@ def build_prompt_text(
     lines.append("")
     lines.append(f"Request: {prompt.prompt}")
     return "\n".join(lines)
+
+
+MAIN_CONTENT_PARAM_NAMES = {
+    "source_string", "text", "input", "content", "string", "s",
+}
+
+
+def is_main_content_param(param_name: str) -> bool:
+    """Check whether a parameter name suggests it holds the primary text
+    content being operated on, rather than a secondary value (e.g. a search
+    term or replacement).
+
+    This is a deliberate heuristic: such parameters should receive the longest
+    available candidate, since they typically represent "the thing being
+    operated on" (the source text), which the model's candidate selection has
+    proven unreliable at identifying on its own when a much shorter, more
+    salient candidate (e.g. an all-caps keyword) is also available. See README
+    for discussion.
+    """
+    return param_name.lower() in MAIN_CONTENT_PARAM_NAMES

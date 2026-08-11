@@ -9,7 +9,8 @@ across a collection of prompts.
 from llm_sdk import Small_LLM_Model  # type: ignore[attr-defined]
 from .schemas import FunctionDefinition, Prompt, Output
 from .token_setup import (literals_encoder, encode_numbers, build_prompt_text,
-                          extract_string_candidates, build_string_trie)
+                          extract_string_candidates, build_string_trie,
+                          is_main_content_param)
 from .constrained_generator import (emit_function_name, emit_parameter_type,
                                     match_regex_keyword)
 from .trie import Trie, build_trie
@@ -82,17 +83,24 @@ def process_prompt(
             "regex" in param_name.lower() or "pattern" in param_name.lower())
         keyword_value = (
             match_regex_keyword(prompt.prompt) if is_regex_param else None)
+        remaining_candidates = [
+            c for c in string_candidates
+            if c not in parameter_values.values()
+        ]
+        if not remaining_candidates:
+            remaining_candidates = string_candidates
         if keyword_value is not None:
             value_tokens = model.encode(f'"{keyword_value}"').tolist()[0]
             output_tokens.extend(value_tokens)
             value: float | str | bool = keyword_value
+        elif (param_info.type == "string"
+                and is_main_content_param(param_name)
+                and remaining_candidates):
+            main_value = max(remaining_candidates, key=len)
+            value_tokens = model.encode(f'"{main_value}"').tolist()[0]
+            output_tokens.extend(value_tokens)
+            value = main_value
         elif param_info.type == "string":
-            remaining_candidates = [
-                c for c in string_candidates
-                if c not in parameter_values.values()
-            ]
-            if not remaining_candidates:
-                remaining_candidates = string_candidates
             selection_hint = (
                 f"(Choosing the value for '{param_name}' from candidates "
                 f"{remaining_candidates}: "
