@@ -7,7 +7,8 @@ parameter types, and generated function-call results.
 
 # TODO: Revisit support for "array" and "object" parameter types.
 # ParameterInfo currently accepts them, but the generation pipeline does not
-# handle them. Decide whether to implement generation support or restrict the
+# handle them. BOOM CRASH
+# Decide whether to implement generation support or restrict the
 # accepted types to those the pipeline can actually generate.
 
 

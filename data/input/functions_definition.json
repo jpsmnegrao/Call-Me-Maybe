@@ -107,5 +107,13 @@
       "attendee": {"type": "string"}
     },
     "returns": {"type": "boolean"}
+  },
+  {
+    "name": "fn_test_array",
+    "description": "A test function with an array parameter.",
+    "parameters": {
+      "items": {"type": "array"}
+    },
+    "returns": {"type": "array"}
   }
 ]

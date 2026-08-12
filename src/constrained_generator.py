@@ -24,12 +24,6 @@ def emit_function_name(
     Returns:
         The name of the selected function.
     """
-
-    # TODO: Handle function names where one valid name is a prefix of another.
-    # Currently, generation stops as soon as a finished trie node is reached,
-    # so a shorter name such as "fn_get" can be selected instead of
-    # "fn_get_current_time".
-
     node = trie.root
     while not node.finished:
         logits = model.get_logits_from_input_ids(output_tokens)
