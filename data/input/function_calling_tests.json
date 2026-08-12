@@ -58,9 +58,6 @@
   },
   {
 	"prompt": "Schedule a meeting titled 'Standup' with Bob"
-  },
-  {
-	"prompt": "Test the array function with items 1, 2, 3"
   }
 ]
   

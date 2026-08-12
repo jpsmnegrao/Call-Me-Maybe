@@ -1,56 +1,138 @@
 *This project has been created as part of the 42 curriculum by jpaim-so.*
 
-# Readme Requirements
-
-A README.md file must be provided at the root of your Git repository. Its purpose is
-to allow anyone unfamiliar with the project (peers, staff, recruiters, etc.) to quickly
-understand what the project is about, how to run it, and where to find more information
-on the topic.
-
-## The README.md must include at least:
-
-• The very first line must be italicized and read: This project has been created as part
-of the 42 curriculum by <login1>[, <login2>[, <login3>[...]]].
-
-• A “Description” section that clearly presents the project, including its goal and a
-brief overview.
-
-• An “Instructions” section containing any relevant information about compilation,
-installation, and/or execution.
-
-• A “Resources” section listing classic references related to the topic (documentation, articles, tutorials, etc.), as well as a description of how AI was used —
-specifying for which tasks and which parts of the project.
-
-
-## Additional sections may be required depending on the project (e.g., usage examples, feature list, technical choices, etc.).
-
 ---
 
 # Call Me Maybe
 
+---
+
 ## Description
+
+**Call Me Maybe** is a Python project that explores constrained text generation
+for function calling with a language model.
+
+The goal is to generate structured function calls from natural-language prompts
+while constraining the model so that generated values follow the available
+function definitions. The project uses a **trie** to constrain function-name
+and string generation to known valid candidates, while numbers and booleans are
+generated under type-specific constraints.
+
+The project includes:
+
+- JSON parsing and validation using Pydantic.
+- Token encoding for fixed JSON syntax and parameter types.
+- Trie-based constrained generation for function and string values.
+- Extraction of potential string values from user prompts.
+- A generation pipeline that combines these components into structured `Output`
+  objects.
+- Tests covering the parsers, trie, token setup, constrained generation, and
+  pipeline.
+
+---
 
 ## Instructions
 
 ### Requirements
 
-- Python 3.10+
+- Python 3.10+;
+- `uv`;
+- The required `llm_sdk` package and model environment.
 
 ### Installation
 
+Install the project dependencies and set up the virtual environment with:
+
 `make`
+
+or:
+
+`make install`
 
 ### Run
 
+Run the function-calling pipeline with:
+
 `make run`
 
-or
+This reads the function definitions from `data/input/functions_definition.json`
+and the prompts from `data/input/function_calling_tests.json`, then writes the
+generated results to:
 
-`python3 main.py <map_file>`
+`data/output/function_calling_results.json`
 
-Example:
+### Debugging
 
-`python3 main.py maps/simple.txt`
+Run the application with Python's debugger using:
+
+`make debug`
+
+### Testing
+
+Run the complete test suite with:
+
+`make test`
+
+Additional test commands are available:
+
+- `make test-silent` — run tests with minimal output;
+- `make test-verbose` — run tests with verbose output;
+- `make test-errors` — run tests while displaying custom test output
+  (displaying error messages).
+
+### Linting and Type Checking
+
+Run the standard code-quality checks with:
+
+`make lint`
+
+This runs `flake8` and `mypy`.
+
+For stricter type checking:
+
+`make lint-strict`
+
+### Cleaning
+
+Remove generated caches and Python bytecode with:
+
+`make clean`
+
+To additionally remove the virtual environment and generated output files:
+
+`make fclean`
+
+### Project structure
+
+```
+src/
+├── __init__.py
+├── __main__.py
+├── cli.py
+├── constrained_generator.py
+├── json_parser.py
+├── pipeline.py
+├── schemas.py
+├── token_setup.py
+└── trie.py
+
+tests/
+├── data/
+├── test_cli.py
+├── test_constrained_generator.py
+├── test_json_parser.py
+├── test_main.py
+├── test_pipeline.py
+├── test_schemas.py
+├── test_token_setup.py
+└── test_trie.py
+
+data/
+├── input/
+│   ├── function_calling_tests.json
+│   └── functions_definition.json
+└── output/
+    └── function_calling_results.json  # Created when the program is run
+```
 
 ---
 
@@ -71,14 +153,72 @@ https://www.youtube.com/watch?v=7xTGNNLPyMI
 ## Additional sections:
 
 ### Algorithm explanation
-• Algorithm explanation: Describe your constrained decoding approach in detail
+
+The project uses constrained decoding to guide the language model toward valid
+function-call outputs while still allowing the model to choose values based on
+the input prompt.
+
+The generation process first encodes the fixed parts of the expected JSON
+structure, such as brackets, keys, commas, and closing characters. Function
+names are stored in a trie, allowing the model to select only token sequences
+that correspond to valid function names. The same approach is used for string
+values extracted from the prompt: candidate strings are encoded and stored in a
+trie, restricting generation to those candidates.
+
+Numbers are generated by restricting the model's choices to the token IDs
+representing digits and numeric symbols. Generation continues while the model
+selects a valid numeric token and stops when a permitted terminator is
+selected. Boolean values are handled by comparing the model's scores for the
+`true` and `false` token sequences and emitting the higher-scoring choice.
+
+The pipeline therefore combines model predictions with deterministic
+constraints. The model decides which valid option is most appropriate, while
+the constraints prevent it from producing values outside the allowed token
+space.
 
 ### Design decisions
-• Design decisions: Explain key choices in your implementation
 
-Pydantic and Class Design
+#### - Pydantic and Class Design
 
-Pydantic is used for classes that represent structured data and require validation. Behavioural classes retain appropriate standard Python base classes, such as argparse.ArgumentParser for the CLI parser and Exception for CLI errors, since Pydantic would not provide useful validation for their roles.
+Pydantic is used for classes that represent structured data and require
+validation. Behavioural classes retain appropriate standard Python base
+classes, such as `argparse.ArgumentParser` for the CLI parser and `Exception`
+for CLI errors, since Pydantic would not provide useful validation for their
+roles.
+
+#### - Trie-based constrained generation
+
+A trie is used for function names and extracted string candidates because it
+represents valid token sequences directly. At each generation step, only the
+tokens corresponding to children of the current trie node are allowed. This
+avoids generating an arbitrary string and checking it afterwards.
+
+#### - Token-level constraints
+
+The implementation operates on the model's token IDs rather than individual
+characters. This is important because the model tokenizer may represent
+multiple characters as a single token. The constraints therefore operate on the
+same representation used by the model itself.
+
+#### - Separation of generation by parameter type
+
+Numbers, strings, booleans, and function names use different generation
+strategies because their valid outputs have different constraints. This keeps
+the constrained generation logic specific to the requirements of each type
+rather than applying one generic mechanism to all values.
+
+#### - Candidate extraction for strings
+
+String candidates are extracted from the user's prompt before generation. This
+provides a finite set of values that the model can choose from and prevents
+unconstrained string generation from producing arbitrary values that were not
+present in the input.
+
+#### - Separation of preparation and generation
+
+Token encoding and trie construction are separated from the actual generation
+pipeline. The generation context can therefore be prepared once for a set of
+function definitions and reused while processing multiple prompts.
 
 ### Performance analysis
 • Performance analysis: Discuss accuracy, speed, and reliability of your solution
@@ -97,3 +237,14 @@ Pydantic is used for classes that represent structured data and require validati
 # Currently, generation stops as soon as a finished trie node is reached,
 # so a shorter name such as "fn_get" can be selected instead of
 # "fn_get_current_time".
+
+
+### Possible Future Refinement
+
+A staff member noted that narrowing the visible context to only the
+*selected* function during parameter-value generation (rather than
+showing all functions throughout, as this project does) improved their
+accuracy significantly. Not implemented here due to the regression risk
+seen when tuning hints earlier (see Challenges Faced) — the project
+already clears the 90% threshold, so this was deprioritized in favor of
+stability.
