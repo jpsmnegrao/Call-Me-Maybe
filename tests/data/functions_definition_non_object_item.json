@@ -1,3 +1,1 @@
-[
-    "this is not an object"
-]
+[42, {"name": "fn_test", "description": "test", "parameters": {}, "returns": {"type": "number"}}]

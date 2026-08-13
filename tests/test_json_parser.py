@@ -11,13 +11,11 @@ valid input.
 
 import pytest
 import json
-
 from pathlib import Path
 from collections.abc import Callable
 from pydantic import ValidationError
 from typing import cast, Any
-
-from src.schemas import Prompt, FunctionDefinition
+from src.schemas import Prompt, FunctionDefinition, Output
 from src.json_parser import prompt_parser, function_parser
 
 
@@ -127,8 +125,6 @@ def test_prompt_parser_not_array() -> None:
 
 def test_prompt_parser_non_object_item() -> None:
     """Verify that a prompt array containing a non-object item is rejected."""
-    # NEED TO CONFIRM THE CONTENT ON THE TEST FILE
-
     with pytest.raises((TypeError, ValidationError)):
         run_parser_test(
             prompt_parser,
@@ -243,8 +239,6 @@ def test_function_parser_not_array() -> None:
 
 def test_function_parser_non_object_item() -> None:
     """Verify that a func array containing a non-object item is rejected."""
-    # NEED TO CONFIRM THE CONTENT ON THE TEST FILE
-
     with pytest.raises((TypeError, ValidationError)):
         run_parser_test(
             function_parser,
@@ -349,3 +343,35 @@ def test_function_definition_empty_parameter_key() -> None:
     }
     with pytest.raises(ValidationError):
         FunctionDefinition(**invalid)
+
+
+def test_function_definition_accepts_integer_type() -> None:
+    """Verify that a parameter with type 'integer' is accepted."""
+    valid = VALID_FUNCTION_DEFINITION.copy()
+    valid["parameters"] = {"n": {"type": "integer"}}
+    function = FunctionDefinition(**valid)
+    assert function.parameters["n"].type == "integer"
+
+
+@pytest.mark.parametrize("rejected_type", ["array", "object"])
+def test_function_definition_rejects_array_and_object_types(
+        rejected_type: str) -> None:
+    """Verify that 'array' and 'object' parameter types are rejected."""
+    invalid = VALID_FUNCTION_DEFINITION.copy()
+    invalid["parameters"] = {"x": {"type": rejected_type}}
+    with pytest.raises(ValidationError):
+        FunctionDefinition(**invalid)
+
+
+def test_output_accepts_mixed_parameter_types() -> None:
+    """Verify that Output accepts a mix of float, int, str, and bool
+    parameter values."""
+    output = Output(
+        prompt="test prompt",
+        name="fn_test",
+        parameters={"a": 2.0, "b": 3, "c": "text", "d": True},
+    )
+    assert output.parameters["a"] == 2.0
+    assert output.parameters["b"] == 3
+    assert output.parameters["c"] == "text"
+    assert output.parameters["d"] is True

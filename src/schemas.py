@@ -4,14 +4,6 @@ Defines the validated data models used for prompts, function definitions,
 parameter types, and generated function-call results.
 """
 
-
-# TODO: Revisit support for "array" and "object" parameter types.
-# ParameterInfo currently accepts them, but the generation pipeline does not
-# handle them. BOOM CRASH
-# Decide whether to implement generation support or restrict the
-# accepted types to those the pipeline can actually generate.
-
-
 from pydantic import BaseModel, Field, field_validator
 from typing import Literal
 
@@ -25,7 +17,6 @@ class Prompt(BaseModel):
 class ParameterInfo(BaseModel):
     """Define the type of a function parameter or return value."""
     model_config = {"extra": "forbid"}
-    # TODO: Revisit support for "array" and "object" parameter types.
     type: Literal["string", "number", "float", "integer", "boolean"]
 
 
