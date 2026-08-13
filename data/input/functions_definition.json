@@ -72,10 +72,10 @@
     "name": "fn_multiply_numbers",
     "description": "Multiply two numbers together and return their product.",
     "parameters": {
-      "x": {"type": "number"},
-      "y": {"type": "number"}
+      "x": {"type": "integer"},
+      "y": {"type": "float"}
     },
-    "returns": {"type": "number"}
+    "returns": {"type": "float"}
   },
   {
     "name": "fn_get_current_time",

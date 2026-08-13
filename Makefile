@@ -1,5 +1,5 @@
-.PHONY: install run debug clean lint lint-strict fclean test test-silent,
-		test-verbose, test-errors
+.PHONY: install run debug clean lint lint-strict fclean test test-silent
+		test-verbose test-errors
 
 all: install
 

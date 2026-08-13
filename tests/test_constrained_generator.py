@@ -85,7 +85,8 @@ def test_emit_number_returns_float_and_terminates(
     terminators = encode_terminators(model, [",", "}", "."])
     output_tokens = model.encode("The sum of 2 and 3 is ").tolist()[0]
     result = emit_number(
-        model, output_tokens, digit_tokens, terminators, max_tokens=20)
+        model, output_tokens, digit_tokens, terminators, "float",
+        max_tokens=20)
     assert isinstance(result, float)
 
 
@@ -121,7 +122,8 @@ def test_emit_number_extracts_the_correct_value(
     output_tokens = model.encode(
         "The first number mentioned in 'the sum of 2 and 3' is ").tolist()[0]
     result = emit_number(
-        model, output_tokens, digit_tokens, terminators, max_tokens=20)
+        model, output_tokens, digit_tokens, terminators, "float",
+        max_tokens=20)
     assert result == 2.0, f"Expected 2.0, got {result}"
 
 

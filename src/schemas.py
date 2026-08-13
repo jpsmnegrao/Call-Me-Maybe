@@ -26,7 +26,7 @@ class ParameterInfo(BaseModel):
     """Define the type of a function parameter or return value."""
     model_config = {"extra": "forbid"}
     # TODO: Revisit support for "array" and "object" parameter types.
-    type: Literal["string", "number", "boolean", "array", "object"]
+    type: Literal["string", "number", "float", "integer", "boolean"]
 
 
 class FunctionDefinition(BaseModel):
@@ -66,4 +66,4 @@ class Output(BaseModel):
     """
     prompt: str
     name: str
-    parameters: dict[str, float | str | bool]
+    parameters: dict[str, float | int | str | bool]

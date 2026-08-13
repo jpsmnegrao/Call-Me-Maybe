@@ -41,7 +41,7 @@ def emit_function_name(
 def emit_number(
         model: Small_LLM_Model, output_tokens: list[int],
         digit_tokens: dict[str, int], terminators: set[int],
-        max_tokens: int = 20) -> float:
+        param_type: str, max_tokens: int = 20) -> int | float:
     """Generate a number while restricting tokens to valid numeric tokens.
 
     Args:
@@ -49,13 +49,17 @@ def emit_number(
         output_tokens: Token IDs generated so far.
         digit_tokens: Mapping of numeric characters to their token IDs.
         terminators: Token IDs that may terminate the generated number.
+        param_type: Declared parameter type to generate.
         max_tokens: Maximum number of numeric tokens to generate.
 
     Returns:
-        The generated value converted to a float.
+        The generated value converted to a float or an integer.
     """
     start = len(output_tokens)
-    digits = set(digit_tokens.values())
+    if param_type == "integer":
+        digits = set(digit_tokens.values()) - {digit_tokens["."]}
+    else:
+        digits = set(digit_tokens.values())
     for _ in range(max_tokens):
         logits = model.get_logits_from_input_ids(output_tokens)
         unconstrained_choice = max(range(len(logits)), key=lambda i: logits[i])
@@ -74,6 +78,8 @@ def emit_number(
             break
     generated_tokens = output_tokens[start:-1]
     number_str = model.decode(generated_tokens)
+    if param_type == "integer":
+        return int(number_str)
     return float(number_str)
 
 
@@ -133,7 +139,7 @@ def emit_boolean(
 def emit_parameter_type(
         param_type: str, model: Small_LLM_Model, output_tokens: list[int],
         digit_tokens: dict[str, int], bool_tokens: dict[str, list[int]],
-        string_trie: Trie | None) -> float | str | bool:
+        string_trie: Trie | None) -> float | int | str | bool:
     """Generate a parameter value according to its declared type.
 
     Args:
@@ -152,9 +158,11 @@ def emit_parameter_type(
         ValueError: If a string parameter has no candidate trie or if the
             parameter type is unsupported.
     """
-    if param_type == "number":
+    if (param_type == "number" or param_type == "float"
+            or param_type == "integer"):
         terminators = encode_terminators(model, [",", "}"])
-        return emit_number(model, output_tokens, digit_tokens, terminators)
+        return emit_number(
+            model, output_tokens, digit_tokens, terminators, param_type)
     elif param_type == "string":
         if string_trie is None:
             raise ValueError("String parameter requires a string_trie!")

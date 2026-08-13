@@ -74,7 +74,7 @@ def process_prompt(
     selected_function = next(
         f for f in functions if f.name == selected_name)
     output_tokens.extend(encoded_lits["lit_parameters"])
-    parameter_values: dict[str, float | str | bool] = {}
+    parameter_values: dict[str, float | int | str | bool] = {}
     param_items = list(selected_function.parameters.items())
     for i, (param_name, param_info) in enumerate(param_items):
         key_segment = f'"{param_name}": '
