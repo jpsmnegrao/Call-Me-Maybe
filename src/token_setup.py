@@ -6,9 +6,6 @@ string candidates, and constructing the text prompt supplied to the LLM.
 """
 
 
-# TODO - THIS SCRIPT HAS NO CORRESPONDENT TEST FILE
-
-
 import re
 from llm_sdk import Small_LLM_Model  # type: ignore
 from .schemas import FunctionDefinition, Prompt
@@ -159,15 +156,19 @@ MAIN_CONTENT_PARAM_NAMES = {
 
 
 def is_main_content_param(param_name: str) -> bool:
-    """Check whether a parameter name suggests it holds the primary text
-    content being operated on, rather than a secondary value (e.g. a search
-    term or replacement).
+    """Check whether a parameter name is in a fixed set of names
+    conventionally used for the primary content parameter (e.g.
+    "source_string", "text").
 
-    This is a deliberate heuristic: such parameters should receive the longest
-    available candidate, since they typically represent "the thing being
-    operated on" (the source text), which the model's candidate selection has
-    proven unreliable at identifying on its own when a much shorter, more
-    salient candidate (e.g. an all-caps keyword) is also available. See README
-    for discussion.
+    Used as a heuristic elsewhere in the pipeline to decide which
+    parameter should receive the longest extracted candidate value,
+    since such parameters typically represent the main text being
+    operated on. See README for discussion of this design decision.
+
+    Args:
+        param_name: The parameter name to check.
+
+    Returns:
+        True if the name matches a known "main content" convention.
     """
     return param_name.lower() in MAIN_CONTENT_PARAM_NAMES

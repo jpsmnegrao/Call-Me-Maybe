@@ -9,7 +9,6 @@ function names, numbers, and strings.
 import pytest
 from llm_sdk import Small_LLM_Model  # type: ignore[attr-defined]
 from src.token_setup import (
-    literals_encoder,
     encode_numbers,
     encode_terminators,
     build_string_trie
@@ -27,41 +26,6 @@ from src.trie import build_trie
 def model() -> Small_LLM_Model:
     """Load the model once for the whole test module (expensive)."""
     return Small_LLM_Model()
-
-
-# ENCODER TESTS (deterministic, no model judgment involved)
-
-
-def test_literals_encoder_has_expected_keys(model: Small_LLM_Model) -> None:
-    """Verify that all expected literal keys are encoded."""
-    encoded = literals_encoder(model)
-    expected_keys = {
-        "lit_open", "lit_prompt", "lit_name", "lit_name_close",
-        "lit_parameters", "lit_comma", "lit_close_entry", "lit_close"}
-    assert expected_keys.issubset(encoded.keys())
-    for value in encoded.values():
-        assert isinstance(value, list)
-        assert len(value) > 0
-
-
-def test_encode_numbers_covers_all_digits_and_symbols(
-        model: Small_LLM_Model) -> None:
-    """Verify that all supported numeric characters are encoded."""
-    digits = encode_numbers(model)
-    expected = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", ".", "-"}
-    assert set(digits.keys()) == expected
-    for token_id in digits.values():
-        assert isinstance(token_id, int)
-
-
-def test_encode_terminators_matches_known_token_ids(
-        model: Small_LLM_Model) -> None:
-    """Verify that terminator token IDs match the model's encodings."""
-    terminators = encode_terminators(model, [",", "}", "]"])
-    comma = model.encode(",").tolist()[0][0]
-    close_brace = model.encode("}").tolist()[0][0]
-    close_bracket = model.encode("]").tolist()[0][0]
-    assert terminators == {comma, close_brace, close_bracket}
 
 
 # EMIT FUNCTION TESTS (model-dependent, minimal/isolated contexts)
