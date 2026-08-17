@@ -6,9 +6,9 @@ corresponding Pydantic schema.
 """
 
 import json
-from .schemas import Prompt, FunctionDefinition
-from pydantic import FilePath
 from typing import Any
+from pydantic import FilePath
+from .schemas import Prompt, FunctionDefinition
 
 
 def prompt_parser(filename: FilePath) -> list[Prompt]:

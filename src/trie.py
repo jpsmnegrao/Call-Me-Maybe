@@ -1,4 +1,9 @@
-"""mambo jambo"""
+"""Prefix trie used to constrain function-name generation.
+
+Provides a token-level trie structure for matching one of a fixed set of valid
+function names during constrained decoding, and a helper to build a trie
+directly from a list of function names using the model's tokenizer.
+"""
 
 
 from __future__ import annotations

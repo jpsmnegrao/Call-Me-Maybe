@@ -214,8 +214,7 @@ def test_main_clean_exit_on_prompt_invalid_entry(
         capsys: pytest.CaptureFixture[str],
         ) -> None:
     """A non-object prompt entry should be handled cleanly."""
-    # NEED TO CONFIRM THE CONTENT ON THE TEST FILE
-
+    assert (DATA / "function_calling_tests_invalid_entry.json").is_file()
     with pytest.raises(SystemExit):
         run_main_with_files(
             monkeypatch,
@@ -231,8 +230,7 @@ def test_main_clean_exit_on_function_invalid_entry(
         capsys: pytest.CaptureFixture[str],
         ) -> None:
     """A non-object function entry should be handled cleanly."""
-    # NEED TO CONFIRM THE CONTENT ON THE TEST FILE
-
+    assert (DATA / "functions_definition_invalid_entry.json").is_file()
     with pytest.raises(SystemExit):
         run_main_with_files(
             monkeypatch,

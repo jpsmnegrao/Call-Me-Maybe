@@ -38,14 +38,18 @@ fclean: clean
 	@rm -rf data/output
 	@echo "Removed virtual environment and output files - deep clean complete!"
 
+# Run all tests normally
 test:
 	uv run pytest
 
+# Run tests quietly without tracebacks
 test-silent:
 	uv run pytest -q --tb=no
 
+# Run tests with verbose test names and output
 test-verbose:
 	uv run pytest -v
 
+# Run tests while showing custom diagnostic output
 test-errors:
 	uv run pytest -s -q
