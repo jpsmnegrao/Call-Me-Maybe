@@ -6,7 +6,7 @@
 ## Description
 
 **Call Me Maybe** is a Python project that explores constrained text generation
-for function calling with a language model.
+for function calling with a small language model that is run locally.
 
 The goal is to generate structured function calls from natural-language prompts
 while constraining the model so that generated values follow the available
@@ -33,6 +33,21 @@ The project includes:
 - Python 3.10+;
 - `uv`;
 - The required `llm_sdk` package and model environment.
+
+#### NOTE
+
+Disk quota / cache configuration
+
+The project is configured in pyproject.toml to store the uv cache locally in
+.uv-cache. This is intentional because 42 machines have strict disk-quota
+limits on the home partition.
+
+The project can therefore be cloned to any location and installed with:
+
+`make install`
+
+No additional configuration is required on a personal computer.
+
 
 ### Installation
 
@@ -64,16 +79,20 @@ Run the application with Python's debugger using:
 
 ### Testing
 
-Run the complete test suite with:
+Run the complete pytest test suite with:
 
 `make test`
 
 Additional test commands are available:
 
 - `make test-silent` — run tests with minimal output;
-- `make test-verbose` — run tests with verbose output;
+- `make test-verbose` — run tests with verbose output (lists all tests);
 - `make test-errors` — run tests while displaying custom test output
   (displaying error messages).
+
+Note that several tests load the real language model and perform genuine
+generation, so running the full suite is significantly slower than typical
+unit tests and requires network access on first run to download the model.
 
 ### Linting and Type Checking
 
@@ -140,13 +159,31 @@ data/
 
 ### Documentation
 
-- to fill in
-- 
-https://www.aidancooper.co.uk/constrained-decoding/
-
-https://www.youtube.com/watch?v=7xTGNNLPyMI
+- [Pydantic documentation](https://docs.pydantic.dev/) — used throughout for
+  schema validation.
+- [Karpathy, "Deep Dive into LLMs like ChatGPT"](https://www.youtube.com/watch?v=7xTGNNLPyMI)
+  — background on tokenization, inference, and tool use, which motivated the overall approach.
+- [A. Cooper, "Constrained Decoding"](https://www.aidancooper.co.uk/constrained-decoding/)
+  — background reading on the general constrained decoding technique.
 
 ### AI Usage
+
+AI was used throughout development as a conversational aid for:
+
+- Understanding the underlying concepts (tokenization, logits, softmax,
+constrained decoding, trie data structures) before implementing them.
+- Debugging specific runtime issues (e.g. token-boundary/concatenation bugs,
+disk-quota errors on school machines, degenerate generation loops) through
+iterative, evidence-based investigation (building small throwaway scripts to
+isolate and confirm each hypothesis before changing production code).
+- Reviewing code, docstrings, and tests for correctness and completeness
+against the actual current behavior of each module.
+- Discussing design trade-offs (e.g. the regex-keyword fallback, the
+main-content-parameter heuristic) and their limitations, including where they
+diverge from a fully general LLM-driven solution.
+
+All code was written, tested, and understood by me; AI assistance was used for
+guidance, debugging, and review.
 
 
 ## Additional sections:
@@ -169,6 +206,18 @@ representing digits and numeric symbols. Generation continues while the model
 selects a valid numeric token and stops when a permitted terminator is
 selected. Boolean values are handled by comparing the model's scores for the
 `true` and `false` token sequences and emitting the higher-scoring choice.
+
+Two deliberate exceptions exist to this candidate/type-driven approach. First,
+parameters whose name suggests a "main content" role (e.g. `source_string`,
+`text`) are directly assigned the longest remaining candidate rather than left
+to model selection, since the model proved unreliable at this specific
+disambiguation when a much shorter, more salient candidate (e.g. an all-caps
+keyword) was also available. Second, parameters whose name suggests a
+regex/pattern field are checked against a small, fixed keyword-to-pattern
+lookup before falling back to candidate extraction, since a regex pattern
+implied by a keyword (e.g. "vowels") never appears literally in the prompt for
+extraction to find. Both are documented, narrow heuristics rather than general
+solutions — see Challenges Faced.
 
 The pipeline therefore combines model predictions with deterministic
 constraints. The model decides which valid option is most appropriate, while
@@ -222,10 +271,12 @@ function definitions and reused while processing multiple prompts.
 ### Performance analysis
 
 On the provided dataset, the implementation correctly selects the function for
-all 11 prompts and correctly extracts the arguments for 10 of 11 prompts. The
-remaining error is the replacement value in the vowel-substitution example.
-This gives 100% function-selection accuracy and approximately 91% complete
-function-call accuracy on the provided dataset.
+all 11 prompts (100% function-selection accuracy) and correctly extracts 18
+of 19 individual argument values (approximately 94.7% argument-extraction
+accuracy). The remaining error is the `replacement` value in the
+vowel-substitution example, where the correct value ("asterisks") is
+implied by context rather than present as a literal or keyword-mapped
+pattern — see Challenges Faced.
 
 The implementation uses constrained decoding rather than relying on the model
 to produce valid JSON by itself. Fixed JSON structure, function names, strings,
@@ -249,14 +300,57 @@ prompts. The implementation uses quoted strings, likely proper nouns, and a
 fallback candidate to provide the constrained string generator with possible
 values.
 
+A closely related challenge was disambiguating multiple string-typed parameters
+on the same function (e.g. `source_string`, `regex`, `replacement`), where
+several candidates could plausibly fit more than one parameter. An initial
+attempt using open-ended, unconstrained token generation for string values
+proved unreliable: the model would frequently fall into repeating short,
+degenerate token sequences rather than terminating cleanly, regardless of the
+surrounding prompt phrasing, context length, or masking strategy tried
+(confirmed through isolated, minimal-context testing that ruled out the
+surrounding pipeline as the cause). Switching to trie-constrained selection
+among extracted candidates resolved this reliably, but introduced a new
+problem: nothing initially prevented the same candidate being assigned to more
+than one parameter, or a short, salient candidate (e.g. an all-caps keyword)
+from being assigned to a parameter that should hold the longest available
+candidate instead. These were addressed with, respectively, a "used" set that
+removes already-assigned candidates from consideration for subsequent
+parameters, and a narrow, explicit heuristic (`is_main_content_param`) that
+deterministically assigns the longest remaining candidate to parameters
+conventionally named for "main content" roles. Both are documented as
+deliberate, narrow compromises rather than general solutions — earlier attempts
+to fix this through richer prompt hints or parameter-processing order proved
+unstable, fixing one case while breaking a previously-correct one.
+
+A separate, related limitation is that some parameter values (e.g. a regex
+pattern implied by the keyword "vowels") never appear literally anywhere in the
+prompt, and so cannot be produced by any extraction-based strategy regardless
+of how it is tuned. A small, explicit keyword-to-pattern lookup 
+(`REGEX_KEYWORD_MAP`) was added as a narrow, deliberate fallback for this
+specific case. This is knowingly not a general solution — an attempt to have
+the model construct a regex pattern from scratch under a broader (but still
+constrained) character-level alphabet was tested and abandoned, since it
+reproduced the same degenerate-generation failure seen with open-ended string
+generation, even though the same model reliably produced correct regex syntax
+when generating completely unconstrained in a minimal test context. This
+suggests the limitation lies in how well masked, peek-based token selection
+cooperates with this specific small model, rather than in the model's
+underlying knowledge.
+
 Testing also revealed that a small language model can still make incorrect
 choices among valid constrained values, so prompting and candidate preparation
 were kept separate from the actual structural constraints.
 
 ### Testing strategy
 
-The project includes unit tests covering the CLI, constrained generator, JSON
-parser, main, the complete generation pipeline, token setup and the Trie setup.
+Tests fall into two categories. Pure-logic functions (e.g.
+`extract_string_candidates`, schema validation, trie insertion) are tested
+deterministically, with exact expected outputs. Functions that call the real
+language model are tested with real model instances and, where the expected
+output is deterministic given a controlled minimal context, assert on the exact
+expected value rather than only checking the return type — this was found
+necessary during development, since type-only assertions passed even when the
+actual generated content was substantively wrong.
 
 The provided function-calling dataset was also run through the complete
 pipeline. The resulting output was inspected to verify function selection,
