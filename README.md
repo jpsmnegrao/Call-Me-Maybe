@@ -81,11 +81,15 @@ Run the standard code-quality checks with:
 
 `make lint`
 
-This runs `flake8` and `mypy`.
+Executes the commands flake8 . and mypy . --warn-return-any
+--warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs
+--check-untyped-defs
 
 For stricter type checking:
 
 `make lint-strict`
+
+Which executes the commands flake8 . and mypy . --strict.
 
 ### Cleaning
 
@@ -105,7 +109,9 @@ src/
 ├── __main__.py
 ├── cli.py
 ├── constrained_generator.py
+├── json_builder.py
 ├── json_parser.py
+├── main.py
 ├── pipeline.py
 ├── schemas.py
 ├── token_setup.py
@@ -118,7 +124,6 @@ tests/
 ├── test_json_parser.py
 ├── test_main.py
 ├── test_pipeline.py
-├── test_schemas.py
 ├── test_token_setup.py
 └── test_trie.py
 
@@ -233,11 +238,11 @@ given in the projects intra page).
 
 ### Challenges faced
 
-A main challenge was constraining different parameter types using the model's
-token-level output. Function names and strings can be represented as finite
-candidate sets and constrained with tries, while numbers require token-level
-numeric constraints and booleans require a comparison between the valid boolean
-choices.
+One of the main challenges was constraining different parameter types using the
+model's token-level output. Function names and strings can be represented as
+finite candidate sets and constrained with tries, while numbers require 
+token-level numeric constraints and booleans require a comparison between the
+valid boolean choices.
 
 Another challenge was extracting useful string candidates from natural-language
 prompts. The implementation uses quoted strings, likely proper nouns, and a
@@ -250,9 +255,8 @@ were kept separate from the actual structural constraints.
 
 ### Testing strategy
 
-The project includes unit tests covering the JSON parser, schemas, trie
-implementation, token setup, constrained generators, CLI, and the complete
-generation pipeline.
+The project includes unit tests covering the CLI, constrained generator, JSON
+parser, main, the complete generation pipeline, token setup and the Trie setup.
 
 The provided function-calling dataset was also run through the complete
 pipeline. The resulting output was inspected to verify function selection,
@@ -268,7 +272,7 @@ Run the project:
 
 `uv run python -m src`
 
-The program reads the function definitions and test prompts from the expected input files and produces:
+The program reads the function definitions and test prompts from the default input files and produces:
 
 data/output/function_calling_results.json
 
@@ -277,6 +281,6 @@ data/output/function_calling_results.json
 
 ### Comprehensive Test Suite
 
-The project includes a comprehensive test suite covering JSON parsing, Pydantic
-schemas, trie construction, token preparation, constrained generation, pipeline
-behaviour, and CLI behaviour.
+The project includes a comprehensive pytest test suite covering JSON parsing,
+Pydantic schemas, trie construction, token preparation, constrained generation,
+pipeline and CLI behaviour.
