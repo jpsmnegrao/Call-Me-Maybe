@@ -7,8 +7,8 @@ pipeline execution, result serialization, and application output.
 import json
 import sys
 from pydantic import ValidationError
-from .json_parser import prompt_parser, function_parser
 from .cli import CLIError, parse_cli
+from .json_parser import prompt_parser, function_parser
 from .pipeline import run_pipeline
 from .json_builder import json_builder
 
@@ -21,7 +21,7 @@ def main() -> None:
     to the configured output file, and prints the generated results.
 
     Expected errors are reported to the user and terminate the application
-    with exit code 1.
+    cleanly.
     """
     try:
         cli = parse_cli()
@@ -44,7 +44,11 @@ def main() -> None:
     except (ValidationError, ValueError, TypeError, OSError) as error:
         print(f"Error reading functions definition file: {error}")
         sys.exit(1)
-    results = run_pipeline(prompts, functions)
+    try:
+        results = run_pipeline(prompts, functions)
+    except ValueError as error:
+        print(f"Error generating function call: {error}")
+        sys.exit(1)
     try:
         json_builder(results, cli.output)
     except OSError as error:

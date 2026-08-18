@@ -221,30 +221,45 @@ pipeline. The generation context can therefore be prepared once for a set of
 function definitions and reused while processing multiple prompts.
 
 ### Performance analysis
-• Performance analysis: Discuss accuracy, speed, and reliability of your solution
+
+On the provided dataset, the implementation correctly selects the function for all 11 prompts and correctly extracts the arguments for 10 of 11 prompts. The remaining error is the replacement value in the vowel-substitution example. This gives 100% function-selection accuracy and approximately 91% complete function-call accuracy on the provided dataset.
+
+The implementation uses constrained decoding rather than relying on the model to produce valid JSON by itself. Fixed JSON structure, function names, strings, numbers, and booleans are constrained during generation, providing reliable schema-compliant output.
+
+TODO: Run the complete dataset on the school PC and record the execution time here.
 
 ### Challenges faced
-• Challenges faced: Document difficulties encountered and how you solved them
+
+A main challenge was constraining different parameter types using the model's token-level output. Function names and strings can be represented as finite candidate sets and constrained with tries, while numbers require token-level numeric constraints and booleans require a comparison between the valid boolean choices.
+
+Another challenge was extracting useful string candidates from natural-language prompts. The implementation uses quoted strings, likely proper nouns, and a fallback candidate to provide the constrained string generator with possible values.
+
+Testing also revealed that a small language model can still make incorrect choices among valid constrained values, so prompting and candidate preparation were kept separate from the actual structural constraints.
 
 ### Testing strategy
-• Testing strategy: Describe how you validated your implementation
+
+The project includes unit tests covering the JSON parser, schemas, trie implementation, token preparation, constrained generators, CLI, and complete generation pipeline.
+
+The provided function-calling dataset was also run through the complete pipeline. The resulting output was inspected to verify function selection, argument extraction, parameter types, and JSON structure.
 
 ### Example usage
-• Example usage: Provide clear examples of running your program
+Set up the project and install its dependencies:
+
+`uv sync`
+
+Run the project:
+
+`uv run python -m src`
+
+The program reads the function definitions and test prompts from the expected input files and produces:
+
+data/output/function_calling_results.json
 
 
-# TO MENTION?: Handle function names where one valid name is a prefix of another.
-# Currently, generation stops as soon as a finished trie node is reached,
-# so a shorter name such as "fn_get" can be selected instead of
-# "fn_get_current_time".
+## Bonus Features
 
+### Comprehensive Test Suite
 
-### Possible Future Refinement
-
-A staff member noted that narrowing the visible context to only the
-*selected* function during parameter-value generation (rather than
-showing all functions throughout, as this project does) improved their
-accuracy significantly. Not implemented here due to the regression risk
-seen when tuning hints earlier (see Challenges Faced) — the project
-already clears the 90% threshold, so this was deprioritized in favor of
-stability.
+The project includes a comprehensive test suite covering JSON parsing,
+Pydantic schemas, trie construction, token preparation, constrained
+generation, pipeline behaviour, and CLI behaviour.

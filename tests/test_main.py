@@ -17,6 +17,7 @@ import sys
 from pathlib import Path
 import pytest
 from src.main import main
+from src.schemas import Prompt, FunctionDefinition
 
 
 DATA = Path("tests/data")
@@ -239,3 +240,32 @@ def test_main_clean_exit_on_function_invalid_entry(
             DATA / "functions_definition_invalid_entry.json",
             "function_invalid_entry",
         )
+
+
+def test_main_clean_exit_on_pipeline_error(
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str]) -> None:
+    """A ValueError raised during pipeline execution should be handled
+    cleanly rather than crashing."""
+    import src.main as main_module
+
+    def fake_run_pipeline(
+            prompts: list[Prompt], functions: list[FunctionDefinition]
+            ) -> None:
+        raise ValueError("simulated generation error")
+
+    monkeypatch.setattr(main_module, "run_pipeline", fake_run_pipeline)
+    monkeypatch.setattr(
+        sys, "argv",
+        [
+            "call-me-maybe",
+            "--functions_definition", str(DATA / "functions_definition.json"),
+            "--input", str(DATA / "function_calling_tests.json"),
+            "--output", str(DATA / "output.json"),
+        ],
+    )
+    with pytest.raises(SystemExit):
+        main_module.main()
+    output = capsys.readouterr().out.strip()
+    assert output
+    assert "Traceback" not in output

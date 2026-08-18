@@ -1,7 +1,7 @@
 """Output writing utilities.
 
 This module serializes the pipeline's results to the output JSON file,
-matching the format required by the project spec.
+matching the format required by the project specifications.
 """
 
 

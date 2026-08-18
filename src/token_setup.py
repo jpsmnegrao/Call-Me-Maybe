@@ -133,7 +133,7 @@ def build_prompt_text(
     """
     lines = [
         "Choose a function for each prompt given.",
-        "Extract the correct arguments and their values from the prompt.",
+        "Extract the correct arguments and exact values from the prompt.",
         "",
         "Available functions:",
     ]
@@ -150,20 +150,17 @@ def build_prompt_text(
     return "\n".join(lines)
 
 
+# Parameter names commonly used for the main string being operated on.
+# These parameters should prefer the longest candidate extracted from the
+# prompt, since they typically contain the primary input text.
+
 MAIN_CONTENT_PARAM_NAMES = {
     "source_string", "text", "input", "content", "string", "s",
 }
 
 
 def is_main_content_param(param_name: str) -> bool:
-    """Check whether a parameter name is in a fixed set of names
-    conventionally used for the primary content parameter (e.g.
-    "source_string", "text").
-
-    Used as a heuristic elsewhere in the pipeline to decide which
-    parameter should receive the longest extracted candidate value,
-    since such parameters typically represent the main text being
-    operated on. See README for discussion of this design decision.
+    """Check whether a parameter conventionally represents main content.
 
     Args:
         param_name: The parameter name to check.

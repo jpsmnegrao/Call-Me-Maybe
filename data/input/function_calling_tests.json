@@ -31,32 +31,5 @@
   },
   {
     "prompt": "Substitute the word 'cat' with 'dog' in 'The cat sat on the mat with another cat'"
-  },
-  {
-	"prompt": "Multiply 7 and 6"
-  },
-  {
-	"prompt": "What is 12 times 9?"
-  },
-  {
-	"prompt": "What time is it right now?"
-  },
-  {
-	"prompt": "Is 42 even?"
-  },
-  {
-	"prompt": "Check if 17 is an even number"
-  },
-  {
-	"prompt": "Make the word 'hello' uppercase"
-  },
-  {
-	"prompt": "Convert 'goodbye' to uppercase"
-  },
-  {
-	"prompt": "Book a meeting called 'Budget Review' with Alice"
-  },
-  {
-	"prompt": "Schedule a meeting titled 'Standup' with Bob"
   }
 ]

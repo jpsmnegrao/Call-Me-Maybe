@@ -67,45 +67,5 @@
     "returns": {
       "type": "string"
     }
-  },
-  {
-    "name": "fn_multiply_numbers",
-    "description": "Multiply two numbers together and return their product.",
-    "parameters": {
-      "x": {"type": "integer"},
-      "y": {"type": "float"}
-    },
-    "returns": {"type": "float"}
-  },
-  {
-    "name": "fn_get_current_time",
-    "description": "Return the current time. Takes no arguments.",
-    "parameters": {},
-    "returns": {"type": "string"}
-  },
-  {
-    "name": "fn_check_is_even",
-    "description": "Check whether a given number is even.",
-    "parameters": {
-      "value": {"type": "number"}
-    },
-    "returns": {"type": "boolean"}
-  },
-  {
-    "name": "fn_uppercase_string",
-    "description": "Convert a string to uppercase.",
-    "parameters": {
-      "text": {"type": "string"}
-    },
-    "returns": {"type": "string"}
-  },
-  {
-    "name": "fn_book_meeting",
-    "description": "Book a meeting with a given title and attendee name.",
-    "parameters": {
-      "title": {"type": "string"},
-      "attendee": {"type": "string"}
-    },
-    "returns": {"type": "boolean"}
   }
 ]

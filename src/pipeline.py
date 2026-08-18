@@ -58,9 +58,11 @@ def process_prompt(
         model: Language model used for constrained generation.
 
     Returns:
-        The generated function call containing the selected function name and
-        extracted parameter values.
+        An Output object containing the prompt, selected function name, and
+        generated parameter values. This result is later printed and serialized
+        to the output JSON file.
     """
+    # Start the output with the prompt and JSON structure.
     prompt_text = build_prompt_text(prompt, functions)
     string_candidates = extract_string_candidates(prompt.prompt)
     output_tokens: list[int] = model.encode(prompt_text).tolist()[0]
@@ -69,16 +71,19 @@ def process_prompt(
     prompt_tokens = model.encode(prompt.prompt).tolist()[0]
     output_tokens.extend(prompt_tokens)
     output_tokens.extend(encoded_lits["lit_name"])
+    # Constrained generation selects one valid function name.
     selected_name = emit_function_name(trie, model, output_tokens)
     output_tokens.extend(encoded_lits["lit_name_close"])
     selected_function = next(
         f for f in functions if f.name == selected_name)
+    # Generate the parameters for the selected function.
     output_tokens.extend(encoded_lits["lit_parameters"])
     parameter_values: dict[str, float | int | str | bool] = {}
     param_items = list(selected_function.parameters.items())
     for i, (param_name, param_info) in enumerate(param_items):
         key_segment = f'"{param_name}": '
         output_tokens.extend(model.encode(key_segment).tolist()[0])
+        # String parameters may use values explicitly mentioned in the prompt.
         is_regex_param = (
             "regex" in param_name.lower() or "pattern" in param_name.lower())
         keyword_value = (
@@ -89,10 +94,12 @@ def process_prompt(
         ]
         if not remaining_candidates:
             remaining_candidates = string_candidates
+        # Regex/pattern values are extracted directly from the prompt.
         if keyword_value is not None:
             value_tokens = model.encode(f'"{keyword_value}"').tolist()[0]
             output_tokens.extend(value_tokens)
             value: float | str | bool = keyword_value
+        # For the main string argument, prefer the longest candidate.
         elif (param_info.type == "string"
                 and is_main_content_param(param_name)
                 and remaining_candidates):
@@ -100,6 +107,7 @@ def process_prompt(
             value_tokens = model.encode(f'"{main_value}"').tolist()[0]
             output_tokens.extend(value_tokens)
             value = main_value
+        # All other string arguments are constrained to the remaining options.
         elif param_info.type == "string":
             selection_hint = (
                 f"(Choosing the value for '{param_name}' from candidates "
@@ -112,6 +120,7 @@ def process_prompt(
             value = emit_parameter_type(
                 param_info.type, model, output_tokens, digit_tokens,
                 bool_tokens, current_string_trie)
+        # Generate numeric or boolean values with token constraints.
         else:
             value = emit_parameter_type(
                 param_info.type, model, output_tokens, digit_tokens,
