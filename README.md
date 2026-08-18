@@ -1,10 +1,7 @@
 *This project has been created as part of the 42 curriculum by jpaim-so.*
 
----
-
 # Call Me Maybe
 
----
 
 ## Description
 
@@ -28,7 +25,6 @@ The project includes:
 - Tests covering the parsers, trie, token setup, constrained generation, and
   pipeline.
 
----
 
 ## Instructions
 
@@ -134,7 +130,6 @@ data/
     └── function_calling_results.json  # Created when the program is run
 ```
 
----
 
 ## Resources
 
@@ -148,7 +143,6 @@ https://www.youtube.com/watch?v=7xTGNNLPyMI
 
 ### AI Usage
 
----
 
 ## Additional sections:
 
@@ -222,27 +216,50 @@ function definitions and reused while processing multiple prompts.
 
 ### Performance analysis
 
-On the provided dataset, the implementation correctly selects the function for all 11 prompts and correctly extracts the arguments for 10 of 11 prompts. The remaining error is the replacement value in the vowel-substitution example. This gives 100% function-selection accuracy and approximately 91% complete function-call accuracy on the provided dataset.
+On the provided dataset, the implementation correctly selects the function for
+all 11 prompts and correctly extracts the arguments for 10 of 11 prompts. The
+remaining error is the replacement value in the vowel-substitution example.
+This gives 100% function-selection accuracy and approximately 91% complete
+function-call accuracy on the provided dataset.
 
-The implementation uses constrained decoding rather than relying on the model to produce valid JSON by itself. Fixed JSON structure, function names, strings, numbers, and booleans are constrained during generation, providing reliable schema-compliant output.
+The implementation uses constrained decoding rather than relying on the model
+to produce valid JSON by itself. Fixed JSON structure, function names, strings,
+numbers, and booleans are constrained during generation, providing reliable
+schema-compliant output.
 
-TODO: Run the complete dataset on the school PC and record the execution time here.
+Execution times to run the script are well under the five minute limit when ran
+in the schools computers (consistently around one minute to process the data
+given in the projects intra page).
 
 ### Challenges faced
 
-A main challenge was constraining different parameter types using the model's token-level output. Function names and strings can be represented as finite candidate sets and constrained with tries, while numbers require token-level numeric constraints and booleans require a comparison between the valid boolean choices.
+A main challenge was constraining different parameter types using the model's
+token-level output. Function names and strings can be represented as finite
+candidate sets and constrained with tries, while numbers require token-level
+numeric constraints and booleans require a comparison between the valid boolean
+choices.
 
-Another challenge was extracting useful string candidates from natural-language prompts. The implementation uses quoted strings, likely proper nouns, and a fallback candidate to provide the constrained string generator with possible values.
+Another challenge was extracting useful string candidates from natural-language
+prompts. The implementation uses quoted strings, likely proper nouns, and a
+fallback candidate to provide the constrained string generator with possible
+values.
 
-Testing also revealed that a small language model can still make incorrect choices among valid constrained values, so prompting and candidate preparation were kept separate from the actual structural constraints.
+Testing also revealed that a small language model can still make incorrect
+choices among valid constrained values, so prompting and candidate preparation
+were kept separate from the actual structural constraints.
 
 ### Testing strategy
 
-The project includes unit tests covering the JSON parser, schemas, trie implementation, token preparation, constrained generators, CLI, and complete generation pipeline.
+The project includes unit tests covering the JSON parser, schemas, trie
+implementation, token setup, constrained generators, CLI, and the complete
+generation pipeline.
 
-The provided function-calling dataset was also run through the complete pipeline. The resulting output was inspected to verify function selection, argument extraction, parameter types, and JSON structure.
+The provided function-calling dataset was also run through the complete
+pipeline. The resulting output was inspected to verify function selection,
+argument extraction, parameter types, and JSON structure.
 
 ### Example usage
+
 Set up the project and install its dependencies:
 
 `uv sync`
@@ -260,6 +277,6 @@ data/output/function_calling_results.json
 
 ### Comprehensive Test Suite
 
-The project includes a comprehensive test suite covering JSON parsing,
-Pydantic schemas, trie construction, token preparation, constrained
-generation, pipeline behaviour, and CLI behaviour.
+The project includes a comprehensive test suite covering JSON parsing, Pydantic
+schemas, trie construction, token preparation, constrained generation, pipeline
+behaviour, and CLI behaviour.
