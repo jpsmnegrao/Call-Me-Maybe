@@ -6,9 +6,6 @@ function-call structure.
 """
 
 
-# NEED TO FIX NEGATIVES NUMBER NOT APPEARING AS PROPER ARGUMENTS
-
-
 from llm_sdk import Small_LLM_Model  # type: ignore
 from .trie import Trie
 from .token_setup import encode_terminators

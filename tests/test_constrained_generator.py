@@ -71,18 +71,18 @@ def test_emit_number_returns_int_for_integer_type(
     assert isinstance(result, int)
 
 
-# def test_emit_number_extracts_negative_value(
-#         model: Small_LLM_Model) -> None:
-#     """Verify that number emission preserves a negative value."""
-#     digit_tokens = encode_numbers(model)
-#     terminators = encode_terminators(model, [",", "}", "."])
-#     output_tokens = model.encode(
-#         "The second number mentioned in 'the sum of 2 and -3' is "
-#     ).tolist()[0]
-#     result = emit_number(
-#         model, output_tokens, digit_tokens, terminators, "float",
-#         max_tokens=20)
-#     assert result == -3.0, f"Expected -3.0, got {result}"
+def test_emit_number_extracts_negative_value(
+        model: Small_LLM_Model) -> None:
+    """Verify that number emission preserves a negative value."""
+    digit_tokens = encode_numbers(model)
+    terminators = encode_terminators(model, [",", "}", "."])
+    output_tokens = model.encode(
+        "The second number mentioned in 'the sum of 2 and -3' is "
+    ).tolist()[0]
+    result = emit_number(
+        model, output_tokens, digit_tokens, terminators, "float",
+        max_tokens=20)
+    assert result == -3.0, f"Expected -3.0, got {result}"
 
 
 def test_emit_string_returns_str_and_terminates(
