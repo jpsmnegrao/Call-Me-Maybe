@@ -3,3 +3,5 @@ __pycache__/
 .pytest_cache/
 .uv-cache/
 .venv/
+.hf-cache/
+.torch-cache/
