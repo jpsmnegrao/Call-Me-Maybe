@@ -1,6 +1,9 @@
 .PHONY: install run debug clean lint lint-strict fclean test test-silent
 		test-verbose test-errors
 
+export HF_HOME := $(CURDIR)/.hf-cache
+export TORCH_HOME := $(CURDIR)/.torch-cache
+
 all: install
 
 install:
