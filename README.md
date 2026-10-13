@@ -48,7 +48,6 @@ The project can therefore be cloned to any location and installed with:
 
 No additional configuration is required on a personal computer.
 
-
 ### Installation
 
 Install the project dependencies and set up the virtual environment with:
@@ -154,6 +153,31 @@ data/
     └── function_calling_results.json  # Created when the program is run
 ```
 
+### Tests
+
+97 automated tests (pytest), split into two categories:
+
+**Deterministic** — pure logic (schema validation, trie construction,
+candidate extraction, CLI parsing, error handling) tested with exact
+expected inputs/outputs, no model required.
+
+**Model-dependent** — constrained generation tested against a real,
+loaded `Qwen/Qwen3-0.6B` instance. These assert exact expected values
+(not just return types), since type-only assertions were found to pass
+even when generated content was substantively wrong.
+
+| File | Covers |
+|---|---|
+| `test_cli.py` | Argument parsing, defaults, malformed flags |
+| `test_json_parser.py` | File/JSON/schema validation for both input files |
+| `test_trie.py` | Trie construction, prefix sharing, name lookup |
+| `test_token_setup.py` | Candidate extraction, literal/number encoding |
+| `test_constrained_generator.py` | Per-type constrained generation, dispatch |
+| `test_pipeline.py` | End-to-end generation, including multi-parameter disambiguation |
+| `test_main.py` | Graceful error handling and clean exit on every failure path |
+
+Run with `make test` (or `test-verbose` / `test-silent` / `test-errors`
+for different output levels).
 
 ## Resources
 

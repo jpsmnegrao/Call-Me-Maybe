@@ -37,7 +37,7 @@ lint-strict:
 	uv run mypy . --strict
 
 fclean: clean
-	@rm -rf .venv
+	@rm -rf .venv .hf-cache/ .uv-cache/
 	@rm -rf data/output
 	@echo "Removed virtual environment and output files - deep clean complete!"
 
